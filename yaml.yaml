@@ -1,0 +1,97 @@
+server:
+  host: 127.0.0.1
+  port: 8080
+  port: 8082
+  port: 8083
+  port: 8081
+  port: 8090
+  port: 8888
+  client_body_size_limit: 210149500
+  server_name: test.com
+  default_error_pages:
+    404: www/html/404.html
+    403: www/html/403.html 
+    501: www/html/501.html
+    502: www/html/502.html
+  route:
+    path: /uploads
+    directory: ./www/scripts
+    methods: GET POST
+    index_file: welcome.html
+    upload_directory: ./
+    cgi:
+      .php: /usr/bin/php-cgi
+  route:
+    path: /
+    directory: ./www/web
+    methods: GET DELETE POST
+    index_file: web.html
+    cgi:
+      .php: /usr/bin/php-cgi
+      .py:  /usr/bin/python3
+      .test: /hello
+  route:
+    path: /scripts
+    directory: ./www/scripts
+    methods: GET POST DELETE
+    index_file: script.py
+    cgi:
+      .php: /usr/bin/php-cgi
+      .py:  /usr/bin/python3
+  route:
+    path: /videos
+    directory: /goinfre/amiftah/videos
+    methods: GET
+  route:
+    path: /web
+    directory: ./www/web
+    methods: GET POST 
+    index_file: web.html
+    upload_directory: ./
+    cgi:
+      .php: /usr/bin/php-cgi
+      .py:  /usr/bin/python3
+  route:
+    path: /list
+    methods: GET
+    directory: ./www/list
+    directory_listing: true
+  route:
+    path: /google
+    redirect: /deprecated
+    methods: GET POST 
+    upload_directory: ./uploads
+  route:
+    path: /deprecated
+    directory: ./www
+    methods: GET POST DELETE
+    redirect: /
+  route:
+    path: /test
+    directory: ./www
+    methods: DELETE
+    index_file: delme.txt
+server:
+  host: 0.0.0.0
+  port: 9999
+  server_name: example2.com
+  client_body_size_limit: 42
+  default_error_pages:
+    404: www/html/404.html
+  route:
+    path: /
+    methods: GET
+    directory: ./www/html
+    directory_listing: true
+  route:
+    path: /uploads
+    directory: ./
+    methods: GET POST
+    index_file: welcome.html
+    upload_directory: uploads
+    index_file: welcome.html
+  route:
+    path: /deprecated
+    directory: ./www
+    methods: GET
+    redirect: /
