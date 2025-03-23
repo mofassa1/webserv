@@ -7,6 +7,8 @@ bool Multiplexer::isServerSocket(int fd) {
 
 int Multiplexer::create_server_socket(unsigned short currentPort, std::string host) {
 
+    //// I need first to check is already have a server with the same host , Port ///////
+
     int Socket = socket(AF_INET, SOCK_STREAM, 0);
     if (Socket == -1)
         throw std::runtime_error("socket failed !!!!!!!");
@@ -18,18 +20,20 @@ int Multiplexer::create_server_socket(unsigned short currentPort, std::string ho
         throw std::runtime_error("inet_pton");
 
     address.sin_port = htons(currentPort);
-
+    const int enable = 1;
+    if (setsockopt(Socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+        throw std::runtime_error("setsockopt(SO_REUSEADDR) failed");
     if (bind(Socket, (struct sockaddr*)&address, sizeof(address)) < 0)
         throw std::runtime_error("bind failed !!!!!!!!!!");
 
-    if (listen(Socket, 4000) < 0)
+    if (listen(Socket, SOMAXCONN) < 0)
         throw std::runtime_error("listen failed !!!!!!!!!!");
     return Socket;
 }
 
 void Multiplexer::startMultiplexing(confugParser& config)
 {
-    std::cout << "debugging pearpse _________________________________________" << std::endl;
+    
     int epollFd;
 
     if ((epollFd = epoll_create(1)) == -1)
@@ -40,11 +44,13 @@ void Multiplexer::startMultiplexing(confugParser& config)
     for (size_t i = 0; i < serversCount; i++) {
         
         std::vector<unsigned short> Ports = config.GetAllData()[i]->GetPorts();
+        // std::vector<int> ServerSocket = config.GetAllData()[i]->GetServerSockets();
         std::string host = config.GetAllData()[i]->GetHost();
         size_t portsCount = Ports.size();
         for (size_t j = 0; j < portsCount; j++)
         {
             int socketFd = this->create_server_socket(Ports[j], host);
+
             struct epoll_event event;
             
             event.events = EPOLLIN;
@@ -53,26 +59,12 @@ void Multiplexer::startMultiplexing(confugParser& config)
             if (epoll_ctl(epollFd, EPOLL_CTL_ADD, socketFd, &event) == -1)
                 throw std::runtime_error("epoll ctl failed !!!!!");
             this->fileDiscriptors.push_back(socketFd);
+            config.GetAllData()[i]->SetServerSocket(socketFd);
         }
     }
 
-    ////printing message for the host and ports to comminicate 
-
-    std::cout << "waiting for incomming request from the hosts and ports :" << std::endl;
-
-    for (size_t i = 0; i < serversCount; i++)
-    {
-        std::vector<unsigned short> Ports = config.GetAllData()[i]->GetPorts();
-        std::string host = config.GetAllData()[i]->GetHost();
-        std::cout << "the host : " << host << " for the posts :" << std::endl;
-        size_t portsCount = Ports.size();
-        for (size_t j = 0; j < portsCount; j++)
-        {
-            std::cout << "           " << Ports[j] << std::endl;
-        }
-    }
-    std::cout<< "##############################################################" << std::endl;
-    ///////////////// it may be removed later ////////////////////
+ 
+    ///////
     this->run();
 }
 
@@ -87,47 +79,50 @@ void Multiplexer::NewClient(int eventFd)
 
 
     struct epoll_event event;
-    event.events = EPOLLIN | EPOLLET;
+    event.events = EPOLLIN | EPOLLOUT;
     event.data.fd = clientFd;
     epoll_ctl(this->EpoleFd, EPOLL_CTL_ADD, clientFd, &event);
 }
 
 
-void    Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesReaded){
-    // this->rest[eventFd].push_back(buffer);
+void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesReaded) {
 
-    std::cout << "get a request of the client fd : " << eventFd << std::endl; 
-    // this->Client[eventFd].GetBuffer(buffer, bytesReaded);
+    // ///
     (void)buffer;
     (void)bytesReaded;
-    // (void)
+    (void)eventFd;
 
-    if (1)
-    {
-        struct epoll_event event;
-        event.events = EPOLLOUT;
-        event.data.fd = eventFd;
-        epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event);
-    }
+    // struct epoll_event event;
+    // event.events = EPOLLOUT | EPOLLET;
+    // event.data.fd = eventFd;
+
+    // if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
+    //     std::cerr << "epoll_ctl failed to modify event" << std::endl;
+    // }
 }
+
 
 void Multiplexer::handelResponse(int eventFd) {
     
-    const char *response =
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/html\r\n"
-        "Content-Length: 84\r\n"
-        "Connection: close\r\n"
-        "\r\n"
-        "<!DOCTYPE html>\r\n"
-        "<html>\r\n"
-        "<head><title>My Page</title></head>\r\n"
-        "<body><h1>Hello, World!</h1></body>\r\n"
-        "</html>\r\n";
+    std::cout << "handelResponse of fd " << eventFd << std::endl;
+    std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, world!";
 
-    write(eventFd, response, strlen(response));
-    close(eventFd);
-    epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
+    ssize_t bytesSent = send(eventFd, response.c_str(), response.size(), 0);
+
+    if (bytesSent == -1) {
+        std::cerr << "send failed for fd: " << eventFd << std::endl;
+        close(eventFd);
+        return;
+    }
+
+    
+    // struct epoll_event event;
+    // event.events = EPOLLIN | EPOLLET;
+    // event.data.fd = eventFd;
+
+    // if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
+    //     std::cerr << "epoll_ctl failed to switch back to EPOLLIN" << std::endl;
+    // }
 }
 
 void Multiplexer::run() {
@@ -167,6 +162,8 @@ void Multiplexer::run() {
             // Check if the event is for writting 
             else if (events[i].events & EPOLLOUT){
                 handelResponse(eventFd);
+                // close(eventFd);
+                // epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
             }
         }
     }

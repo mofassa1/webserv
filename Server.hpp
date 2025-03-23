@@ -6,6 +6,7 @@
 class Server
 {
     private:
+        std::vector<int> sockets;
         std::string host;
         std::vector<unsigned short> ports;
         size_t client_body_size_limit;
@@ -21,7 +22,9 @@ class Server
         void SetServerName(std::string value);
         void SetDefaultERRPages(unsigned short key, std::string value);
         void SetRoute(route Route);
+        void SetServerSocket(int socket);
 
+        
         //////////// Geters ////////////
         std::string GetHost(void);
         std::vector<unsigned short> GetPorts(void);
@@ -31,6 +34,7 @@ class Server
         std::vector<route> GetRoute(void);
         
         ///////////// sokets ////////////
+        std::vector<int> GetServerSockets();
 
         // std::vector <int> 
         int fd;
@@ -38,3 +42,4 @@ class Server
         Server();
         ~Server();
 };
+

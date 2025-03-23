@@ -19,6 +19,7 @@ class Multiplexer
     private:
         int create_server_socket(unsigned short currentPort, std::string host);
         std::map<int, Client> Client;
+        std::map<int, std::string> soketOfHost;
 
     public:
         Multiplexer(/* args */);

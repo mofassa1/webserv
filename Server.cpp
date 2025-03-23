@@ -32,6 +32,11 @@ void Server::SetRoute(route Route){
     this->routs.push_back(Route);
 }
 
+void Server::SetServerSocket(int socket)
+{
+    this->sockets.push_back(socket);
+}
+
 /// ////// Geters ///////////////
 
 std::string Server::GetHost(void){
@@ -52,6 +57,12 @@ std::map<unsigned short, std::string>  Server::GetDefaultERRPages(void){
 std::vector<route> Server::GetRoute(void){
     return this->routs;
 }
+
+std::vector<int> Server::GetServerSockets()
+{
+    return this->sockets;
+}
+
 
 /////////// constructors ////////
 
