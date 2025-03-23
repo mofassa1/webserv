@@ -63,7 +63,7 @@ void Multiplexer::startMultiplexing(confugParser& config)
         }
     }
 
- 
+
     ///////
     this->run();
 }
@@ -79,7 +79,7 @@ void Multiplexer::NewClient(int eventFd)
 
 
     struct epoll_event event;
-    event.events = EPOLLIN | EPOLLOUT;
+    event.events = EPOLLIN | EPOLLET;
     event.data.fd = clientFd;
     epoll_ctl(this->EpoleFd, EPOLL_CTL_ADD, clientFd, &event);
 }
@@ -92,17 +92,22 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
     (void)bytesReaded;
     (void)eventFd;
 
-    // struct epoll_event event;
-    // event.events = EPOLLOUT | EPOLLET;
-    // event.data.fd = eventFd;
+    struct epoll_event event;
+    event.events = EPOLLOUT | EPOLLET;
+    event.data.fd = eventFd;
 
-    // if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
-    //     std::cerr << "epoll_ctl failed to modify event" << std::endl;
-    // }
+    if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
+        std::cerr << "epoll_ctl failed to modify event" << std::endl;
+    }
 }
 
 
 void Multiplexer::handelResponse(int eventFd) {
+
+    if (eventFd == -1) {
+        std::cerr << "fd is invalid, connection closed?" << std::endl;
+        return;
+    }
     
     std::cout << "handelResponse of fd " << eventFd << std::endl;
     std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, world!";
@@ -114,15 +119,14 @@ void Multiplexer::handelResponse(int eventFd) {
         close(eventFd);
         return;
     }
+    struct epoll_event event;
+    event.events = EPOLLIN | EPOLLET;
+    event.data.fd = eventFd;
 
-    
-    // struct epoll_event event;
-    // event.events = EPOLLIN | EPOLLET;
-    // event.data.fd = eventFd;
+    if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
+        std::cerr << "epoll_ctl failed to modify event" << std::endl;
+    }
 
-    // if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
-    //     std::cerr << "epoll_ctl failed to switch back to EPOLLIN" << std::endl;
-    // }
 }
 
 void Multiplexer::run() {
@@ -149,6 +153,7 @@ void Multiplexer::run() {
                 char buffer[1024];
                 size_t bytesReaded = read(eventFd, buffer, BUFFERSIZE);
 
+                // if the client disconeect or other issue 
                 if (bytesReaded <= 0){
                     close(eventFd);
                     epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
