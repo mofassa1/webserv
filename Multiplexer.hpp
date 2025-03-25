@@ -1,7 +1,9 @@
 #pragma once
 
 #include "confugParser.hpp"
-
+///
+#include <fcntl.h>
+///
 #include <iostream>
 #include <vector>
 #include <cstring>

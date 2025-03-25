@@ -77,9 +77,8 @@ void Multiplexer::NewClient(int eventFd)
         return;
     }
 
-
     struct epoll_event event;
-    event.events = EPOLLIN | EPOLLET;
+    event.events = EPOLLIN | EPOLLOUT;
     event.data.fd = clientFd;
     epoll_ctl(this->EpoleFd, EPOLL_CTL_ADD, clientFd, &event);
 }
@@ -93,7 +92,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
     (void)eventFd;
 
     struct epoll_event event;
-    event.events = EPOLLOUT | EPOLLET;
+    event.events = EPOLLOUT;
     event.data.fd = eventFd;
 
     if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
@@ -109,16 +108,19 @@ void Multiplexer::handelResponse(int eventFd) {
         return;
     }
     
-    std::cout << "handelResponse of fd " << eventFd << std::endl;
+    // std::cout << "handelResponse of fd " << eventFd << std::endl;
     std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, world!";
 
-    ssize_t bytesSent = send(eventFd, response.c_str(), response.size(), 0);
+    ssize_t bytesSent = send(eventFd, response.c_str(), response.size(), MSG_NOSIGNAL);
 
     if (bytesSent == -1) {
         std::cerr << "send failed for fd: " << eventFd << std::endl;
         close(eventFd);
+        epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
         return;
     }
+   
+    std::cerr << "send succesfull for fd: " << eventFd << std::endl;
     struct epoll_event event;
     event.events = EPOLLIN | EPOLLET;
     event.data.fd = eventFd;
@@ -132,6 +134,7 @@ void Multiplexer::handelResponse(int eventFd) {
 void Multiplexer::run() {
     
     while (true) {
+
         struct epoll_event events[1024];
         int eventCount = epoll_wait(this->EpoleFd, events, 1024, -1);
         if (eventCount == -1) {
@@ -167,8 +170,8 @@ void Multiplexer::run() {
             // Check if the event is for writting 
             else if (events[i].events & EPOLLOUT){
                 handelResponse(eventFd);
-                // close(eventFd);
-                // epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
+                close(eventFd);
+                epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
             }
         }
     }
