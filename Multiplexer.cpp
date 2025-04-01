@@ -63,59 +63,34 @@ void Multiplexer::startMultiplexing(confugParser& config)
         }
     }
 
-
     ///////
     this->run();
 }
 
 void Multiplexer::NewClient(int eventFd)
 {
-    
     int clientFd = accept(eventFd, NULL, NULL);
     if (clientFd == -1) {
         std::cerr << "accept failed" << std::endl;
         return;
     }
-
-
-    struct epoll_event event;
-    event.events = EPOLLIN | EPOLLET;
-    event.data.fd = clientFd;
-    epoll_ctl(this->EpoleFd, EPOLL_CTL_ADD, clientFd, &event);
+    client[clientFd] = Client(clientFd, this->EpoleFd);
 }
-
-
-void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesReaded) {
-
-    // ///
-    (void)buffer;
-    (void)bytesReaded;
-    (void)eventFd;
-
-    struct epoll_event event;
-    event.events = EPOLLOUT | EPOLLET;
-    event.data.fd = eventFd;
-
-    if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
-        std::cerr << "epoll_ctl failed to modify event" << std::endl;
-    }
-}
-
 
 void Multiplexer::handelResponse(int eventFd) {
-
+    
     if (eventFd == -1) {
-        std::cerr << "fd is invalid, connection closed?" << std::endl;
+        // std::cerr << "fd is invalid, connection closed?" << std::endl;
         return;
     }
     
-    std::cout << "handelResponse of fd " << eventFd << std::endl;
+    // std::cout << "handelResponse of fd " << eventFd << std::endl;
     std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, world!";
 
     ssize_t bytesSent = send(eventFd, response.c_str(), response.size(), 0);
 
     if (bytesSent == -1) {
-        std::cerr << "send failed for fd: " << eventFd << std::endl;
+        // std::cerr << "send failed for fd: " << eventFd << std::endl;
         close(eventFd);
         return;
     }
@@ -124,9 +99,23 @@ void Multiplexer::handelResponse(int eventFd) {
     event.data.fd = eventFd;
 
     if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
-        std::cerr << "epoll_ctl failed to modify event" << std::endl;
+        // std::cerr << "epoll_ctl failed to modify event" << std::endl;
     }
+    
+}
 
+void    check_message(int eventFd){
+    const char *http_response = 
+    "HTTP/1.1 200 OK\r\n"
+    "Content-Type: text/html\r\n"
+        "Content-Length: 19\r\n"  // Length of the message below
+        "\r\n"
+        "waslatna chokrane";  // Body content
+        send(eventFd, http_response, strlen(http_response), 0);
+}
+
+void Multiplexer::handelRequest(int eventFd) {
+    (void) eventFd;
 }
 
 void Multiplexer::run() {
@@ -135,7 +124,7 @@ void Multiplexer::run() {
         struct epoll_event events[1024];
         int eventCount = epoll_wait(this->EpoleFd, events, 1024, -1);
         if (eventCount == -1) {
-            std::cerr << "epoll_wait failed" << std::endl;
+            // std::cerr << "epoll_wait failed" << std::endl;
             continue ;
         }
         else if (eventCount == 0)
@@ -146,30 +135,21 @@ void Multiplexer::run() {
 
             // If it is a server socket we need to accept new client
             if (isServerSocket(eventFd)) {  
+                static int count = 0;
+                count++;
                 NewClient(eventFd);
+                std::cout << GREEN << "New connection accepted: " << COLOR_RESET << count  << std::endl;
             }
             // Check if the event is for reading
             else if (events[i].events & EPOLLIN) {
-                char buffer[1024];
-                size_t bytesReaded = read(eventFd, buffer, BUFFERSIZE);
-
-                // if the client disconeect or other issue 
-                if (bytesReaded <= 0){
-                    close(eventFd);
-                    epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
-                }
-                else
-                {
-                    buffer[bytesReaded] = '\0';
-                    handelRequest(eventFd ,buffer, bytesReaded);
+                //std::cout << YELLOW << "Read event on fd: " << COLOR_RESET << eventFd << std::endl;
+                if (client.find(eventFd) != client.end()) {
+                    client[eventFd].Request();
+                    check_message(eventFd);
+                    // handelRequest(eventFd);
                 }
             }
             // Check if the event is for writting 
-            else if (events[i].events & EPOLLOUT){
-                handelResponse(eventFd);
-                // close(eventFd);
-                // epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
-            }
         }
     }
 }

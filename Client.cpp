@@ -1,45 +1,41 @@
 #include "Client.hpp"
 
-
-void    Client::parseBody(std::string buff, int buffetLen) {
-
-    this->body.append(buff, 0, buffetLen);
+Client::Client() : clientFd(-1) {  // Default constructor
+    // std::cout << "Client default constructor called" << std::endl;
 }
 
-void    Client::parseHeader(std::string buff, int buffetLen) {
-
-    this->header.append(buff, 0, buffetLen);
-}
-
-void   Client::GetBuffer(std::string buff, int buffetLen){
-
-    if (!isHeader)
-        this->parseBody(buff, buffetLen);
-    else
-    {
-        this->request.append(buff);
-        size_t index = this->request.find("\r\n\n\r");
-        
-        if (index == std::string::npos)
-        {
-            parseHeader(this->request, buffetLen);
-        }
-        else
-        {
-            // std::string headerPart = this->request.substr(0, index);
-            // std::string bodyPart   = this->request.substr(index + 4);
-            parseHeader(this->request.substr(0, index), index + 1); /// check later
-            parseBody(this->request.substr(index + 4), buffetLen - index - 3); // also need to check later
-            this->isHeader = false;
-        }
-    }
-}
-
-Client::Client(/* args */)
-{
-    this->isHeader = true;
+Client::Client(int _eventFd, int EpoleFd) : clientFd(_eventFd) {  // Use _eventFd here
+    epoll.events = EPOLLIN | EPOLLET;  // Set epoll events
+    epoll.data.fd = clientFd;  // Associate client fd with epoll
+    epoll_ctl(EpoleFd, EPOLL_CTL_ADD, clientFd, &epoll);  // Register with epoll
+    std::cout << GREEN << "Client created" << COLOR_RESET << std::endl;
 }
 
 Client::~Client()
 {
+    // std::cout << "Client destructor called" << std::endl;
+}
+
+void Client::Request()
+{
+    char buffer[1024];
+    size_t bytesReaded = read(clientFd, buffer, BUFFERSIZE);
+
+    
+    std::cout << CYAN;
+    std::cout << "-----> bytesReaded: " << bytesReaded << std::endl;
+    std::cout << "-----> clientFd: " << clientFd <<  std::endl;
+    std::cout << "-> buffer <- " << COLOR_RESET << std::endl 
+               << MAGENTA << buffer << COLOR_RESET << std::endl;
+
+    // if the client disconeect or other issue 
+    if (bytesReaded <= 0){
+        close(clientFd);
+        // epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
+    }
+    else
+    {
+        buffer[bytesReaded] = '\0';
+        httpRequest.parseRequest(buffer);
+    }
 }

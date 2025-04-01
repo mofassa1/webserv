@@ -10,25 +10,21 @@
 #include <sys/epoll.h>
 #include <algorithm>
 
+#include "HttpRequest.hpp"
+
+#define BUFFERSIZE 1000
+
 class Client
 {
     private:
-        // int fd; // i may remove it later
-        bool  isHeader;
-        std::string request;
-        std::string header;
-        std::string body;
-        std::map<std::string, std::string> HeaderAtrributes;
+        HttpRequest httpRequest;
+        struct epoll_event epoll;
+        int clientFd;
 
     public:
-
-        // void   getRequestBuff(std::string buff, int buffetLen);
-        // void   parseBuffer(std::string buff, int buffetLen);
-        void   GetBuffer(std::string buff, int buffetLen);
-        void   parseHeader(std::string buff, int buffetLen);
-        void   parseBody(std::string buff, int buffetLen);
-        
-        Client(/* args */);
+        Client();
+        Client(int _eventFd, int EpoleFd);
         ~Client();
-};
 
+        void Request();
+};

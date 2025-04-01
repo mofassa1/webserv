@@ -6,7 +6,7 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
 RM = rm -rf
 
-SRC =  main.cpp confugParser.cpp route.cpp Server.cpp Multiplexer.cpp Client.cpp
+SRC =  main.cpp confugParser.cpp route.cpp Server.cpp Multiplexer.cpp Client.cpp HttpRequest.cpp \
 
 OBJ = $(SRC:.cpp=.o)
 

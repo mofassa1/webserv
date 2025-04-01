@@ -7,7 +7,7 @@ int main(int ac, char** av)
 
     if (ac != 2)
     {
-        std::cerr << "no confuguration file" << std::endl;
+        // std::cerr << "no confuguration file" << std::endl;
         return -1;
     }
     confugParser File;
@@ -20,7 +20,7 @@ int main(int ac, char** av)
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        // std::cerr << e.what() << '\n';
     }
     
     
