@@ -299,7 +299,7 @@ void confugParser::parsePort(std::vector<std::string> &line, Server *newServer)
     if (line.size() != 2)
         Error(line);
     size_t value = stringToint(line[1]);
-    if (value < 0 || value > 65535)
+    if (value > 65535)
         throw std::runtime_error("Invalid port: out of range (0-65535)");
     newServer->SetPorts(static_cast<unsigned short>(value));
 }
@@ -381,4 +381,25 @@ void confugParser::Parser(const std::string &PathToConfig) {
         ServerParser(newServer); 
 
     file.close();
+}
+
+
+void confugParser::newClient(int clientSocket, int ServerSocket){
+    size_t count = this->fileData.size();
+    for (size_t i = 0; i < count; i++)
+    {
+        if (this->fileData[i]->isTheSeverSocket(ServerSocket))
+            this->fileData[i]->setClientSocket(clientSocket);
+    }
+}
+
+void confugParser::removeClient(int socket){
+    size_t count = this->fileData.size();
+
+    for (size_t i = 0; i < count; i++)
+    {
+        
+        this->fileData[i]->removeClient(socket);
+    }
+    
 }

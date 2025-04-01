@@ -1,5 +1,8 @@
 #include "confugParser.hpp"
 #include "Multiplexer.hpp"
+#include <csignal>
+
+
 
 int main(int ac, char** av)
 {
@@ -15,7 +18,9 @@ int main(int ac, char** av)
     {
         File.Parser(av[1]);
         
+        
         Multiplexer multiplexer;
+        
         multiplexer.startMultiplexing(File);
     }
     catch(const std::exception& e)

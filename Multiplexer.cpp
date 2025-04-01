@@ -65,22 +65,23 @@ void Multiplexer::startMultiplexing(confugParser& config)
 
 
     ///////
-    this->run();
+    this->run(config);
 }
 
-void Multiplexer::NewClient(int eventFd)
+int Multiplexer::NewClient(int eventFd)
 {
     
     int clientFd = accept(eventFd, NULL, NULL);
     if (clientFd == -1) {
         std::cerr << "accept failed" << std::endl;
-        return;
+        return -1;
     }
 
     struct epoll_event event;
     event.events = EPOLLIN | EPOLLOUT;
     event.data.fd = clientFd;
     epoll_ctl(this->EpoleFd, EPOLL_CTL_ADD, clientFd, &event);
+    return clientFd;
 }
 
 
@@ -131,7 +132,7 @@ void Multiplexer::handelResponse(int eventFd) {
 
 }
 
-void Multiplexer::run() {
+void Multiplexer::run(confugParser& config) {
     
     while (true) {
 
@@ -149,7 +150,9 @@ void Multiplexer::run() {
 
             // If it is a server socket we need to accept new client
             if (isServerSocket(eventFd)) {  
-                NewClient(eventFd);
+                int clientSocket = NewClient(eventFd);
+                if (clientSocket != -1)
+                    config.newClient(clientSocket, eventFd);
             }
             // Check if the event is for reading
             else if (events[i].events & EPOLLIN) {
@@ -160,6 +163,7 @@ void Multiplexer::run() {
                 if (bytesReaded <= 0){
                     close(eventFd);
                     epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
+                    
                 }
                 else
                 {
@@ -176,6 +180,9 @@ void Multiplexer::run() {
         }
     }
 }
+
+
+
 
 Multiplexer::Multiplexer(/* args */)
 {
