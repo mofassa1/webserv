@@ -6,9 +6,27 @@ bool Multiplexer::isServerSocket(int fd) {
 }
 
 int Multiplexer::create_server_socket(unsigned short currentPort, std::string host) {
-
+    
     //// I need first to check is already have a server with the same host , Port ///////
+    
+    static std::vector<std::pair<unsigned short, std::string> > binded;
+    static std::map<std::pair<unsigned short, std::string>, int> socketServer;
 
+
+    bool found = false;
+    std::pair<unsigned short, std::string> key_to_find = std::make_pair(currentPort, host);
+    for (std::vector<std::pair<unsigned short, std::string> >::iterator it = binded.begin(); it != binded.end(); ++it) {
+        if (it->first == key_to_find.first && it->second == key_to_find.second) {
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
+        return socketServer[key_to_find] * -1;
+    }
+    
+    
     int Socket = socket(AF_INET, SOCK_STREAM, 0);
     if (Socket == -1)
         throw std::runtime_error("socket failed !!!!!!!");
@@ -28,6 +46,10 @@ int Multiplexer::create_server_socket(unsigned short currentPort, std::string ho
 
     if (listen(Socket, SOMAXCONN) < 0)
         throw std::runtime_error("listen failed !!!!!!!!!!");
+    
+    binded.push_back(key_to_find);
+    socketServer[key_to_find] = Socket;
+
     return Socket;
 }
 
@@ -50,7 +72,11 @@ void Multiplexer::startMultiplexing(confugParser& config)
         for (size_t j = 0; j < portsCount; j++)
         {
             int socketFd = this->create_server_socket(Ports[j], host);
-
+            if (socketFd < 0) 
+            {
+                config.GetAllData()[i]->SetServerSocket(socketFd * -1);
+                continue;
+            }
             struct epoll_event event;
             
             event.events = EPOLLIN;
@@ -102,7 +128,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
 }
 
 
-void Multiplexer::handelResponse(int eventFd) {
+void Multiplexer::handelResponse(int eventFd, confugParser &confug) {
 
     if (eventFd == -1) {
         std::cerr << "fd is invalid, connection closed?" << std::endl;
@@ -118,6 +144,7 @@ void Multiplexer::handelResponse(int eventFd) {
         std::cerr << "send failed for fd: " << eventFd << std::endl;
         close(eventFd);
         epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
+        confug.removeClient(eventFd);
         return;
     }
    
@@ -163,7 +190,7 @@ void Multiplexer::run(confugParser& config) {
                 if (bytesReaded <= 0){
                     close(eventFd);
                     epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
-                    
+                    config.removeClient(eventFd);
                 }
                 else
                 {
@@ -173,9 +200,10 @@ void Multiplexer::run(confugParser& config) {
             }
             // Check if the event is for writting 
             else if (events[i].events & EPOLLOUT){
-                handelResponse(eventFd);
+                handelResponse(eventFd, config);
                 close(eventFd);
                 epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
+                config.removeClient(eventFd);
             }
         }
     }

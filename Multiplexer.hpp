@@ -33,7 +33,7 @@ class Multiplexer
         int    NewClient(int eventFd);
         bool    isServerSocket(int fd);
         void    handelRequest(int eventFd, std::string buffer, size_t bytesReaded);
-        void    handelResponse(int eventFd);
+        void    handelResponse(int eventFd, confugParser &confug);
         /// //// signal handeler /////////
 
         std::vector <int> fileDiscriptors;
