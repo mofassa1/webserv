@@ -118,8 +118,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
     (void)bytesReaded;
     (void)eventFd;
     
-    if (salit parcing)
-    {
+// ela saliti parsing {}
         struct epoll_event event;
         event.events = EPOLLOUT;
         event.data.fd = eventFd;
@@ -127,7 +126,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
             std::cerr << "epoll_ctl failed to modify event" << std::endl;
         }
-    }
+    
 }
 
 
@@ -190,7 +189,7 @@ void Multiplexer::run(confugParser& config) {
                 size_t bytesReaded = read(eventFd, buffer, BUFFERSIZE);
 
                 // if the client disconeect or other issue 
-                if (bytesReaded <= 0){
+                if (bytesReaded <= 0) {
                     close(eventFd);
                     epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
                     config.removeClient(eventFd);
@@ -202,7 +201,7 @@ void Multiplexer::run(confugParser& config) {
                 }
             }
             // Check if the event is for writting 
-            else if (events[i].events & EPOLLOUT){
+            else if (events[i].events & EPOLLOUT) {
                 handelResponse(eventFd, config);
                 close(eventFd);
                 epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
