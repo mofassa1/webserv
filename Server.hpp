@@ -3,6 +3,7 @@
 #define MaxSize 50000
 
 ////// start of server class ////////////////////////////
+
 class Server
 {
     private:

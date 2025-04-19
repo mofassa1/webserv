@@ -117,13 +117,16 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
     (void)buffer;
     (void)bytesReaded;
     (void)eventFd;
+    
+    if (salit parcing)
+    {
+        struct epoll_event event;
+        event.events = EPOLLOUT;
+        event.data.fd = eventFd;
 
-    struct epoll_event event;
-    event.events = EPOLLOUT;
-    event.data.fd = eventFd;
-
-    if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
-        std::cerr << "epoll_ctl failed to modify event" << std::endl;
+        if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
+            std::cerr << "epoll_ctl failed to modify event" << std::endl;
+        }
     }
 }
 
