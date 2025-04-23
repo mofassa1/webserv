@@ -1,12 +1,14 @@
 #pragma once
 #include "route.hpp"
-#define MaxSize 50000
+#define MaxSize 500
 
 ////// start of server class ////////////////////////////
+
 class Server
 {
     private:
         std::vector<int> sockets;
+        std::vector<int> clientSocets;
         std::string host;
         std::vector<unsigned short> ports;
         size_t client_body_size_limit;
@@ -22,8 +24,10 @@ class Server
         void SetServerName(std::string value);
         void SetDefaultERRPages(unsigned short key, std::string value);
         void SetRoute(route Route);
-        void SetServerSocket(int socket);
 
+        ////
+        void SetServerSocket(int socket);
+        void setClientSocket(int socket);
         
         //////////// Geters ////////////
         std::string GetHost(void);
@@ -35,8 +39,14 @@ class Server
         
         ///////////// sokets ////////////
         std::vector<int> GetServerSockets();
-
+        const std::vector <int> getClientSockets() const;
         // std::vector <int> 
+        //// extra methods ///////////////
+
+        bool isTheSeverClient(int socket) const;
+        bool isTheSeverSocket(int socket) const;
+
+        void removeClient(int socket);
         int fd;
 
         Server();

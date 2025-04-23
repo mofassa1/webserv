@@ -74,5 +74,48 @@ Server::Server() {
 
 Server::~Server() {
 
-    // std::cout << "server distructor called !!!" << std::endl;
+    std::cout << "server distructor called !!!" << std::endl;
+}
+
+
+
+void Server::setClientSocket(int socket){
+    this->clientSocets.push_back(socket);
+}
+
+const std::vector<int> Server::getClientSockets() const{
+    return this->clientSocets;
+}
+
+bool Server::isTheSeverClient(int socket) const{
+
+    size_t count = this->clientSocets.size();
+    for (size_t i = 0; i < count; i++)
+    {
+        if (this->clientSocets[i] == socket)
+            return true;
+    }
+    return false;
+}
+
+bool Server::isTheSeverSocket(int socket) const{
+    size_t count = this->sockets.size();
+
+    for (size_t i = 0; i < count; i++)
+    {
+        if (this->sockets[i] == socket) 
+            return true;
+    }
+    return false;
+}
+
+void Server::removeClient(int socket) {
+    size_t count = this->clientSocets.size();
+
+    for (size_t i = 0; i < count; i++)
+    {
+        if (clientSocets[i] == socket)
+            clientSocets.erase(clientSocets.begin() + i);
+    }
+    
 }
