@@ -39,13 +39,18 @@ class confugParser
         //////// error while parsing ///////////////
         void Error(const std::vector<std::string> &words);
 
+       
+
+        
     public:
         confugParser();
         void Parser(const std::string &PathToConfig);
-
+        
         std::vector<Server*> GetAllData();
         ~confugParser();
-
+         /////// adding a client to server ....
+        void newClient(int clientSocket, int ServerSocket);
+        void removeClient(int socket);
 
 };
 
