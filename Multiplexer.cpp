@@ -117,16 +117,15 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
     (void)buffer;
     (void)bytesReaded;
     (void)eventFd;
-    
+
 // ela saliti parsing {}
         struct epoll_event event;
-        event.events = EPOLLOUT;
+        event.events = EPOLLOUT | EPOLLET;
         event.data.fd = eventFd;
 
         if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1) {
             std::cerr << "epoll_ctl failed to modify event" << std::endl;
         }
-    
 }
 
 
@@ -181,7 +180,16 @@ void Multiplexer::run(confugParser& config) {
             if (isServerSocket(eventFd)) {  
                 int clientSocket = NewClient(eventFd);
                 if (clientSocket != -1)
+                {
                     config.newClient(clientSocket, eventFd);
+                    size_t count = config.GetAllData().size();
+                    for (size_t i = 0; i < count; i++)
+                    {
+                        if (config.GetAllData()[i]->isTheSeverSocket(eventFd))
+                            clientOfServer[clientSocket] = *config.GetAllData()[i];
+                    }
+                    
+                }
             }
             // Check if the event is for reading
             else if (events[i].events & EPOLLIN) {
@@ -193,6 +201,7 @@ void Multiplexer::run(confugParser& config) {
                     close(eventFd);
                     epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
                     config.removeClient(eventFd);
+                    clientOfServer.erase(eventFd);
                 }
                 else
                 {
@@ -206,6 +215,7 @@ void Multiplexer::run(confugParser& config) {
                 close(eventFd);
                 epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
                 config.removeClient(eventFd);
+                clientOfServer.erase(eventFd);
             }
         }
     }

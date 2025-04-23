@@ -1,6 +1,6 @@
 #pragma once
 #include "route.hpp"
-#define MaxSize 50000
+#define MaxSize 500
 
 ////// start of server class ////////////////////////////
 
