@@ -186,7 +186,7 @@ void Multiplexer::run(confugParser& config) {
                     for (size_t i = 0; i < count; i++)
                     {
                         if (config.GetAllData()[i]->isTheSeverSocket(eventFd))
-                            clientOfServer[clientSocket] = *config.GetAllData()[i];
+                            clientOfServer[clientSocket] = config.GetAllData()[i];
                     }
                     
                 }
