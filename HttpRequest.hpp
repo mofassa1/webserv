@@ -29,7 +29,6 @@ private:
     std::vector<std::string> lines;
     t_start_line tstart_line;
     std::map<std::string, std::string> mheaders; // Stores headers as key-value pairs
-    std::string body;
     
 public:
     HttpRequest();

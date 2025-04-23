@@ -18,13 +18,10 @@ class Client
 {
     private:
         HttpRequest httpRequest;
-        struct epoll_event epoll;
-        int clientFd;
 
     public:
+        std::string buffer;
+        int BytesReaded;
         Client();
-        Client(int _eventFd, int EpoleFd);
         ~Client();
-
-        void Request();
 };

@@ -16,8 +16,6 @@
 
 #define BUFFERSIZE 1000
 
-
-
 class Multiplexer
 {
     private:
