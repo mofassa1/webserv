@@ -14,14 +14,26 @@
 
 #define BUFFERSIZE 1000
 
+enum Client_state{
+    waiting,
+    request_start_line,
+    request_headers,
+    request_body
+};
+
+
 class Client
 {
     private:
         HttpRequest httpRequest;
+        Client_state state;
 
     public:
+        Server *server;
         std::string buffer;
         int BytesReaded;
+
+        void    handle_request();
         Client();
         ~Client();
 };

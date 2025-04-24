@@ -120,17 +120,19 @@ bool AreYouNew(int client_sockfd, std::map<int, Client> &clients) {
 
 void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesReaded)
 {
-
     if(AreYouNew(eventFd, client)){
         client[eventFd].buffer += buffer;
         client[eventFd].BytesReaded += bytesReaded;
-        
-        std::cout << RED << "FIRST TIME" << COLOR_RESET << std::endl;
+        client[eventFd].server = clientOfServer[eventFd];
 
+        client[eventFd].handle_request();
+        // if(the request is valid)
+        std::cout << RED << "FIRST TIME" << COLOR_RESET << std::endl;
         std::cout << GREEN << "[" << eventFd << "] buffer: \n" << buffer << "\n";
         std::cout << "bytesReaded: " << bytesReaded << COLOR_RESET <<  std::endl; 
     }
     else{
+        client[eventFd].handle_request();
         std::cout << YELLOW << "ANOTHER TIME" << COLOR_RESET << std::endl;
 
         std::cout << CYAN << "[" << eventFd << "] buffer: \n" << buffer << "\n";
