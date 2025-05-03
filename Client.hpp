@@ -18,7 +18,8 @@ enum Client_state{
     waiting,
     request_start_line,
     request_headers,
-    request_body
+    request_body,
+    done
 };
 
 
@@ -33,7 +34,7 @@ class Client
         std::string buffer;
         int BytesReaded;
 
-        void    handle_request();
+        void    handle_request(const std::string& buffer);
         Client();
         ~Client();
 };

@@ -35,6 +35,8 @@ public:
     ~HttpRequest();
 
     // Parsing functions
+    
+    bool    VALID_CRLN_CRLN(const std::string& buffer);
     void parseRequest(const std::string &buffer);
     void storethebuffer(const std::string &buffer);
     void start_line();

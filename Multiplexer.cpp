@@ -108,7 +108,7 @@ int Multiplexer::NewClient(int eventFd)
     }
 
     struct epoll_event event;
-    event.events = EPOLLIN | EPOLLOUT;
+    event.events = EPOLLIN;
     event.data.fd = clientFd;
     epoll_ctl(this->EpoleFd, EPOLL_CTL_ADD, clientFd, &event);
     return clientFd;
@@ -120,24 +120,16 @@ bool AreYouNew(int client_sockfd, std::map<int, Client> &clients) {
 
 void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesReaded)
 {
-    if(AreYouNew(eventFd, client)){
-        client[eventFd].buffer += buffer;
-        client[eventFd].BytesReaded += bytesReaded;
-        client[eventFd].server = clientOfServer[eventFd];
-
-        client[eventFd].handle_request();
-        // if(the request is valid)
-        std::cout << RED << "FIRST TIME" << COLOR_RESET << std::endl;
-        std::cout << GREEN << "[" << eventFd << "] buffer: \n" << buffer << "\n";
-        std::cout << "bytesReaded: " << bytesReaded << COLOR_RESET <<  std::endl; 
+    if (AreYouNew(eventFd, client)) {
+        client[eventFd] = Client();  // Only now, create a new client
     }
-    else{
-        client[eventFd].handle_request();
-        std::cout << YELLOW << "ANOTHER TIME" << COLOR_RESET << std::endl;
+    Client& c = client[eventFd];
 
-        std::cout << CYAN << "[" << eventFd << "] buffer: \n" << buffer << "\n";
-        std::cout << "bytesReaded: " << bytesReaded << COLOR_RESET <<  std::endl; 
-    }
+    c.buffer += buffer;
+    c.BytesReaded += bytesReaded;
+    c.server = clientOfServer[eventFd];
+
+    c.handle_request(c.buffer);
 
     /////////////////////////////////
     // struct epoll_event event;

@@ -158,6 +158,16 @@ void    HttpRequest::getbody(){
 
 }
 
+bool    HttpRequest::VALID_CRLN_CRLN(const std::string& buffer){ // raw HTTP request
+    std::size_t header_end = buffer.find("\r\n\r\n");
+    
+    if (header_end != std::string::npos)
+    {
+        std::cout << "valid" << std::endl;
+        return true;
+    }
+    return false;
+}
 
 void HttpRequest::parseRequest(const std::string &buffer) {
     try{
