@@ -22,7 +22,6 @@ enum Client_state{
     done
 };
 
-
 class Client
 {
     private:
@@ -34,7 +33,7 @@ class Client
         std::string buffer;
         int BytesReaded;
 
-        void    handle_request(const std::string& buffer);
+        void    handle_request(const std::string& buffer, int fd);
         Client();
         ~Client();
 };

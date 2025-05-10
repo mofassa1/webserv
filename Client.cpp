@@ -10,13 +10,16 @@ Client::~Client()
 }
 
 
-void    Client::handle_request(const std::string& buffer){
-    (void)buffer;
+void    Client::handle_request(const std::string& buffer, int fd){
     switch(state){
         case waiting:
-            std::cout << GREEN << "WAITING" << COLOR_RESET << std::endl;
-                // if(httpRequest.VALID_CRLN_CRLN(buffer))
+            std::cout << GREEN << fd << " WAITING" << COLOR_RESET << std::endl;
+            std::cout << RED << buffer << COLOR_RESET << std::endl; 
+                if(httpRequest.VALID_CRLN_CRLN(buffer))
+                {    
                     state = request_start_line;
+                    std::cout << GREEN << "GO TO START LINE" << std::endl;
+                }
             break;
         case request_start_line :
             std::cout << GREEN << "request start line " << std::endl;

@@ -129,7 +129,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
     c.BytesReaded += bytesReaded;
     c.server = clientOfServer[eventFd];
 
-    c.handle_request(c.buffer);
+    c.handle_request(c.buffer, eventFd);
 
     /////////////////////////////////
     // struct epoll_event event;
@@ -224,6 +224,7 @@ void Multiplexer::run(confugParser &config)
                     epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
                     config.removeClient(eventFd);
                     clientOfServer.erase(eventFd);
+                    std::cout << "closed" << std::endl;
                 }
                 else
                 {
@@ -234,6 +235,7 @@ void Multiplexer::run(confugParser &config)
             // Check if the event is for writting
             else if (events[i].events & EPOLLOUT)
             {
+                std::cout << "wa hna" << std::endl;
                 handelResponse(eventFd, config);
                 close(eventFd);
                 epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
