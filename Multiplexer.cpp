@@ -121,7 +121,7 @@ bool AreYouNew(int client_sockfd, std::map<int, Client> &clients) {
 void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesReaded)
 {
     if (AreYouNew(eventFd, client)) {
-        client[eventFd] = Client();  // Only now, create a new client
+        client[eventFd] = Client();
     }
     Client& c = client[eventFd];
 
@@ -228,14 +228,12 @@ void Multiplexer::run(confugParser &config)
                 }
                 else
                 {
-                    buffer[bytesReaded] = '\0';
                     handelRequest(eventFd, buffer, bytesReaded);
                 }
             }
             // Check if the event is for writting
             else if (events[i].events & EPOLLOUT)
             {
-                std::cout << "wa hna" << std::endl;
                 handelResponse(eventFd, config);
                 close(eventFd);
                 epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
