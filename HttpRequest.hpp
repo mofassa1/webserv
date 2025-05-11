@@ -53,4 +53,9 @@ public:
     // print 
     static void print_vector(std::vector<std::string> &vec);
     static void print_map(const std::map<std::string, std::string> &m);
+
+    // Getters
+    std::string getMethod() const;
+    std::string getUrl() const;
+    std::string getVersion() const;
 };

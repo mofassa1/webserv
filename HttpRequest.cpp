@@ -71,9 +71,9 @@ bool HttpRequest::validstartline(std::vector<std::string> &vstart_line){
     return true;
 }
 
-void HttpRequest::start_line(){
+void HttpRequest::start_line() {
     std::vector<std::string>vstart_line;
-    split_line(lines[0], vstart_line);   
+    split_line(lines[0], vstart_line);
     if(!validstartline(vstart_line))
     {
            std::cout << RED << "INVALID START LINE" << COLOR_RESET << std::endl;
@@ -137,11 +137,14 @@ void HttpRequest::print_map(const std::map<std::string, std::string> &m) {
 
 void    HttpRequest::headers(){
     std::vector<std::string> vheaders;
+    if(lines.size() < 2)
+    {
+        std::cout << RED << "INVALID HEADERS" << COLOR_RESET << std::endl;
+        throw std::exception();
+    }
     for(size_t i = 1; i < lines.size(); i++){
         if(lines[i] == "\r\n")
-        {    
             break;
-        }
         split_header(lines[i], vheaders);
         if(!validheader(vheaders))
         {
@@ -170,14 +173,28 @@ bool    HttpRequest::VALID_CRLN_CRLN(const std::string& buffer){ // raw HTTP req
 }
 
 void HttpRequest::parseRequest(const std::string &buffer) {
-    try{
         storethebuffer(buffer);
         start_line();
         headers();
         getbody();
-    }
-    catch(std::exception &e)
-    {
+}
 
+std::string HttpRequest::getMethod() const{
+    return tstart_line.method;
+}
+
+std::string HttpRequest::getUrl() const{
+    return tstart_line.url;
+}
+
+std::string HttpRequest::getVersion() const{
+    return tstart_line.version;
+}
+
+void HttpRequest::print_vector(std::vector<std::string> &vec) {
+    std::cout << YELLOW;
+    for (size_t i = 0; i < vec.size(); i++) {
+        std::cout << vec[i];
     }
+    std::cout << COLOR_RESET;
 }

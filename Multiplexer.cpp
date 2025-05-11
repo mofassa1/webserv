@@ -114,32 +114,40 @@ int Multiplexer::NewClient(int eventFd)
     return clientFd;
 }
 
-bool AreYouNew(int client_sockfd, std::map<int, Client> &clients) {
-        return clients.find(client_sockfd) == clients.end();
+bool AreYouNew(int client_sockfd, std::map<int, Client> &clients)
+{
+    return clients.find(client_sockfd) == clients.end();
 }
 
 void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesReaded)
 {
-    if (AreYouNew(eventFd, client)) {
-        client[eventFd] = Client();
+    try
+    {
+        if (AreYouNew(eventFd, client))
+        {
+            client[eventFd] = Client();
+        }
+        Client &c = client[eventFd];
+
+        c.buffer += buffer;
+        c.BytesReaded += bytesReaded;
+        c.server = clientOfServer[eventFd];
+        c.parse_request(eventFd);
+
+        /////////////////////////////////
+        // struct epoll_event event;
+        // event.events = EPOLLOUT | EPOLLET;
+        // event.data.fd = eventFd;
+
+        // if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1)
+        // {
+        //     std::cerr << "epoll_ctl failed to modify event" << std::endl;
+        // }
     }
-    Client& c = client[eventFd];
-
-    c.buffer += buffer;
-    c.BytesReaded += bytesReaded;
-    c.server = clientOfServer[eventFd];
-
-    c.handle_request(c.buffer, eventFd);
-
-    /////////////////////////////////
-    // struct epoll_event event;
-    // event.events = EPOLLOUT | EPOLLET;
-    // event.data.fd = eventFd;
-
-    // if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1)
-    // {
-    //     std::cerr << "epoll_ctl failed to modify event" << std::endl;
-    // }
+    catch (std::exception &e)
+    {
+        std::cerr << "Error in parse_request: " << e.what() << std::endl;
+    }
 }
 
 void Multiplexer::handelResponse(int eventFd, confugParser &confug)
@@ -228,6 +236,7 @@ void Multiplexer::run(confugParser &config)
                 }
                 else
                 {
+                    buffer[bytesReaded] = '\0';
                     handelRequest(eventFd, buffer, bytesReaded);
                 }
             }

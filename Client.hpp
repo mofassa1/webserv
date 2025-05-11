@@ -33,7 +33,7 @@ class Client
         std::string buffer;
         int BytesReaded;
 
-        void    handle_request(const std::string& buffer, int fd);
+        void    parse_request(int fd);
         Client();
         ~Client();
 };
