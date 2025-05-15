@@ -144,6 +144,9 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         //     std::cerr << "epoll_ctl failed to modify event" << std::endl;
         // }
     }
+    catch(int error){
+        std::cout << "ERROR: " << error << std::endl;
+    }
     catch (std::exception &e)
     {
         std::cerr << "Error in parse_request: " << e.what() << std::endl;

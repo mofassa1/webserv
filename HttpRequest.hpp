@@ -18,6 +18,8 @@
 #define COLOR_RESET "\033[0m"
 
 
+#define BAD_REQUEST 400
+
 typedef struct s_start_line {
     std::string method;
     std::string url;
@@ -28,7 +30,7 @@ class HttpRequest {
 private:
     std::vector<std::string> lines;
     t_start_line tstart_line;
-    std::map<std::string, std::string> mheaders; // Stores headers as key-value pairs
+    std::map<std::string, std::string> mheaders;
     
 public:
     HttpRequest();
