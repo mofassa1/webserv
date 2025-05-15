@@ -132,6 +132,9 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         c.buffer += buffer;
         c.BytesReaded += bytesReaded;
         c.server = clientOfServer[eventFd];
+        c.allowed_methods.push_back("GET");
+        c.allowed_methods.push_back("POST");
+        c.allowed_methods.push_back("DELETE");        
         c.parse_request(eventFd);
 
         /////////////////////////////////

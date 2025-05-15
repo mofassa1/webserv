@@ -27,8 +27,9 @@ class Client
     private:
         HttpRequest httpRequest;
         Client_state state;
-
-    public:
+        
+        public:
+        std::vector<std::string> allowed_methods;
         Server *server;
         std::string buffer;
         int BytesReaded;

@@ -19,6 +19,7 @@
 
 
 #define BAD_REQUEST 400
+#define LENGTH_REQUIRED 411
 
 typedef struct s_start_line {
     std::string method;
@@ -41,11 +42,11 @@ public:
     bool    VALID_CRLN_CRLN(const std::string& buffer);
     void parseRequest(const std::string &buffer);
     void storethebuffer(const std::string &buffer);
-    void start_line();
+    void start_line(std::vector<std::string>& allowed_methods);
     void    headers();
     void    getbody();
 
-    bool validstartline(std::vector<std::string> &vstart_line);
+    bool validstartline(std::vector<std::string> &vstart_line, std::vector<std::string>& allowed_methods);
     bool validheader(const std::vector<std::string> &vheader);
     // bool validbody(const std::string &line);
 
@@ -60,4 +61,7 @@ public:
     std::string getMethod() const;
     std::string getUrl() const;
     std::string getVersion() const;
+
+    bool hasContentLength;
+    bool hasTransferEncoding;
 };

@@ -54,11 +54,19 @@ void HttpRequest::split_line(const std::string &buffer, std::vector<std::string>
     }
 }
 
-bool HttpRequest::validstartline(std::vector<std::string> &vstart_line)
+bool HttpRequest::validstartline(std::vector<std::string> &vstart_line, std::vector<std::string>& allowed_methods)
 {
+    bool method_allowed = false;
+    
     if (vstart_line.size() != 7)
         return false;
-    if (vstart_line[0] != "GET" && vstart_line[0] != "POST" && vstart_line[0] != "DELETE")
+    for (size_t i = 0; i < allowed_methods.size(); ++i) {
+        if (vstart_line[0] == allowed_methods[i]) {
+            method_allowed = true;
+            break;
+        }
+    }
+    if (!method_allowed)
         return false;
     if (vstart_line[1] != " ")
         return false;
@@ -75,13 +83,13 @@ bool HttpRequest::validstartline(std::vector<std::string> &vstart_line)
     return true;
 }
 
-void HttpRequest::start_line()
+void HttpRequest::start_line(std::vector<std::string>& allowed_methods)
 {
     if (lines.empty())
         throw std::exception();
     std::vector<std::string> vstart_line;
     split_line(lines[0], vstart_line);
-    if (!validstartline(vstart_line))
+    if (!validstartline(vstart_line, allowed_methods))
         throw BAD_REQUEST;
     tstart_line.method = vstart_line[0];
     tstart_line.url = vstart_line[2];
@@ -162,15 +170,28 @@ void HttpRequest::headers()
 
 void HttpRequest::getbody()
 {   
-    if (mheaders.find("Content-Length") != mheaders.end()) {
-        std::string value = mheaders["Content-Length"];
-        // Do something with the value
-    } 
-    else if()
-    else {
-        // Key does not exist
+    hasContentLength = mheaders.find("Content-Length") != mheaders.end();
+    hasTransferEncoding = mheaders.find("Transfer-Encoding") != mheaders.end();
+
+    if (hasContentLength && hasTransferEncoding)
+        throw BAD_REQUEST;
+
+    if (!hasContentLength && !hasTransferEncoding) 
+        throw LENGTH_REQUIRED;
+
+    if (hasTransferEncoding) {
+
+    }
+    if (hasContentLength && !hasTransferEncoding) {
+
+    }
+    if (!hasContentLength && hasTransferEncoding) {
+        // You can implement chunked decoding here
+        std::cout << GREEN << "Chunked transfer encoding detected (decoding not implemented yet)" << COLOR_RESET << std::endl;
+        return;
     }
 }
+
 
 bool HttpRequest::VALID_CRLN_CRLN(const std::string &buffer)
 {
