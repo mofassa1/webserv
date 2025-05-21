@@ -205,7 +205,7 @@ bool HttpRequest::VALID_CRLN_CRLN(const std::string &buffer)
 void HttpRequest::parseRequest(const std::string &buffer)
 {
     storethebuffer(buffer);
-    start_line();
+    //start_line();
     headers();
     getbody();
 }

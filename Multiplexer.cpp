@@ -132,11 +132,27 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         c.buffer += buffer;
         c.BytesReaded += bytesReaded;
         c.server = clientOfServer[eventFd];
-        c.allowed_methods.push_back("GET");
-        c.allowed_methods.push_back("POST");
-        c.allowed_methods.push_back("DELETE");        
+        // c.allowed_methods.push_back("GET");
+        // c.allowed_methods.push_back("POST");
+        // c.allowed_methods.push_back("DELETE");        
         c.parse_request(eventFd);
+        
+        c.routes =  c.server->GetRoute();
+        
+        std::cout << " hnaaaaaaaaaaaaaaaaaaaaaaaaaaa feeeeeeeeeeeeeeeeeeeeeen >" << std::endl;
+        size_t i = 0;
+        for(; i < c.routes.size() ; i++){
+            std::string copie = c.routes[i].GetPats()["path:"];
+            std::cout << RED << copie <<  COLOR_RESET << std::endl;
+            if(c.httpRequest.getUrl() == copie)
+            {
+                c.index_route = i;
+                break;
+            }
 
+        }
+        if(c.index_route == -1)
+            throw BAD_REQUEST;
         /////////////////////////////////
         // struct epoll_event event;
         // event.events = EPOLLOUT | EPOLLET;

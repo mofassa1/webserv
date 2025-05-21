@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client() : state(waiting)
+Client::Client() : state(waiting), index_route(-1)
 { // Default constructor
     // std::cout << "Client default constructor called" << std::endl;
 }

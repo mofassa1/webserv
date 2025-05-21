@@ -25,10 +25,12 @@ enum Client_state{
 class Client
 {
     private:
+    Client_state state;
+    
+    public:
         HttpRequest httpRequest;
-        Client_state state;
-        
-        public:
+        std::vector<route> routes;
+        int index_route;
         std::vector<std::string> allowed_methods;
         Server *server;
         std::string buffer;
