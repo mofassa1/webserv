@@ -137,22 +137,22 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         // c.allowed_methods.push_back("DELETE");        
         c.parse_request(eventFd);
         
-        c.routes =  c.server->GetRoute();
+        // c.routes =  c.server->GetRoute();
         
-        std::cout << " hnaaaaaaaaaaaaaaaaaaaaaaaaaaa feeeeeeeeeeeeeeeeeeeeeen >" << std::endl;
-        size_t i = 0;
-        for(; i < c.routes.size() ; i++){
-            std::string copie = c.routes[i].GetPats()["path:"];
-            std::cout << RED << copie <<  COLOR_RESET << std::endl;
-            if(c.httpRequest.getUrl() == copie)
-            {
-                c.index_route = i;
-                break;
-            }
+        // std::cout << " hnaaaaaaaaaaaaaaaaaaaaaaaaaaa feeeeeeeeeeeeeeeeeeeeeen >" << std::endl;
+        // size_t i = 0;
+        // for(; i < c.routes.size() ; i++){
+        //     std::string copie = c.routes[i].GetPats()["path:"];
+        //     std::cout << RED << copie <<  COLOR_RESET << std::endl;
+        //     if(c.httpRequest.getUrl() == copie)
+        //     {
+        //         c.index_route = i;
+        //         break;
+        //     }
 
-        }
-        if(c.index_route == -1)
-            throw BAD_REQUEST;
+        // }
+        // if(c.index_route == -1)
+        //     throw BAD_REQUEST;
         /////////////////////////////////
         // struct epoll_event event;
         // event.events = EPOLLOUT | EPOLLET;

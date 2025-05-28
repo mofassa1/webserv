@@ -1,4 +1,4 @@
-NAME = parser
+NAME = webserv
 
 CXX = c++
 
