@@ -24,7 +24,7 @@ void Client::parse_request(int fd)
         /* fall through */
     case request_start_line:
         std::cout << GREEN << "[" << fd << "]" << COLOR_RESET << std::endl;
-        httpRequest.start_line(allowed_methods);
+        httpRequest.start_line();
         state = request_headers;
         /* fall through */
     case request_headers:

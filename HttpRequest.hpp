@@ -42,11 +42,11 @@ public:
     bool    VALID_CRLN_CRLN(const std::string& buffer);
     void parseRequest(const std::string &buffer);
     void storethebuffer(const std::string &buffer);
-    void start_line(std::vector<std::string>& allowed_methods);
+    void start_line();
     void    headers();
     void    getbody();
 
-    bool validstartline(std::vector<std::string> &vstart_line, std::vector<std::string>& allowed_methods);
+    bool validstartline(std::vector<std::string> &vstart_line);
     bool validheader(const std::vector<std::string> &vheader);
     // bool validbody(const std::string &line);
 
