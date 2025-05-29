@@ -1,10 +1,10 @@
-==> parsing conf
+=> CGI AND POST amine 
 
-==> parsing req
+=> fix allowed methods in parsing 
 
-==> parsing methods
+=> timeout in multiplexer 
 
-==> multip
+=> GET AND CHUNKED AND TRANSFER DECODING
 
-==> cgi
+=> GET need and interprter in the code complete . 
 
