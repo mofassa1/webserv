@@ -20,7 +20,7 @@ int main(int ac, char** av)
     }
     catch(const std::exception& e)
     {
-        // std::cerr << e.what() << '\n';
+        std::cerr << e.what() << '\n';
     }
     
     

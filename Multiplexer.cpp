@@ -135,24 +135,33 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         // c.allowed_methods.push_back("GET");
         // c.allowed_methods.push_back("POST");
         // c.allowed_methods.push_back("DELETE");        
-        c.parse_request(eventFd);
         
-        // c.routes =  c.server->GetRoute();
         
-        // std::cout << " hnaaaaaaaaaaaaaaaaaaaaaaaaaaa feeeeeeeeeeeeeeeeeeeeeen >" << std::endl;
-        // size_t i = 0;
-        // for(; i < c.routes.size() ; i++){
-        //     std::string copie = c.routes[i].GetPats()["path:"];
-        //     std::cout << RED << copie <<  COLOR_RESET << std::endl;
-        //     if(c.httpRequest.getUrl() == copie)
-        //     {
-        //         c.index_route = i;
-        //         break;
-        //     }
+        Server *courantServer = this->clientOfServer[eventFd];
+        /*
+            now we need the to know the route to get the alowd methods 
+        */
+        size_t routesCount = courantServer->GetRoute().size();
+        
+        
+        route courantRoute;
+        bool  founded = false;
 
-        // }
-        // if(c.index_route == -1)
-        //     throw BAD_REQUEST;
+        for (size_t i = 0; i < routesCount; i++)
+        {
+            if (courantServer->GetRoute()[i].GetPats()["path:"] == c.httpRequest.getUrl())
+            {
+                courantRoute = courantServer->GetRoute()[i];
+                founded = true;
+                break ;
+            }
+        }
+        if (!founded)
+            throw 7;
+
+        c.allowed_methods = courantRoute.GetMethods();
+        c.parse_request(eventFd);
+
         /////////////////////////////////
         // struct epoll_event event;
         // event.events = EPOLLOUT | EPOLLET;

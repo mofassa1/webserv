@@ -56,17 +56,8 @@ void HttpRequest::split_line(const std::string &buffer, std::vector<std::string>
 
 bool HttpRequest::validstartline(std::vector<std::string> &vstart_line, std::vector<std::string>& allowed_methods)
 {
-    bool method_allowed = false;
-    
+    (void)allowed_methods;
     if (vstart_line.size() != 7)
-        return false;
-    for (size_t i = 0; i < allowed_methods.size(); ++i) {
-        if (vstart_line[0] == allowed_methods[i]) {
-            method_allowed = true;
-            break;
-        }
-    }
-    if (!method_allowed)
         return false;
     if (vstart_line[1] != " ")
         return false;
@@ -90,9 +81,13 @@ void HttpRequest::start_line(std::vector<std::string>& allowed_methods)
     std::vector<std::string> vstart_line;
     split_line(lines[0], vstart_line);
     if (!validstartline(vstart_line, allowed_methods))
-        throw BAD_REQUEST;
+        throw 1;
     tstart_line.method = vstart_line[0];
     tstart_line.url = vstart_line[2];
+    std::cerr << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << std::endl;
+    std::cerr << "tstart_line.url : " << tstart_line.url << std::endl;
+    std::cerr << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << std::endl;
+
     tstart_line.version = vstart_line[4];
     std::cout << GREEN << "- - - - - - VALID START LINE - - - - - - -" << COLOR_RESET << std::endl;
 }
@@ -127,11 +122,11 @@ void HttpRequest::split_header(const std::string &buffer, std::vector<std::strin
     if (pos == std::string::npos || pos == 0)
     {
         words.clear();
-        throw BAD_REQUEST;
+        throw 1;
     }
     std::string header_name = buffer.substr(0, pos);
     if (header_name.find(" ") != std::string::npos)
-        throw BAD_REQUEST;
+        throw 2;
     std::string header_value = buffer.substr(pos + 1);
     if (!header_value.empty() && header_value[0] == ' ')
         header_value.erase(0, 1);
@@ -154,14 +149,14 @@ void HttpRequest::headers()
 {
     std::vector<std::string> vheaders;
     if (lines.size() < 2)
-        throw BAD_REQUEST;
+        throw 3;
     for (size_t i = 1; i < lines.size(); i++)
     {
         if (lines[i] == "\r\n")
             break;
         split_header(lines[i], vheaders);
         if (!validheader(vheaders))
-            throw BAD_REQUEST;
+            throw 5;
         vheaders.clear();
     }
     std::cout << GREEN << "- - - - - - VALID HEADERS - - - - - -" << COLOR_RESET << std::endl;
@@ -174,7 +169,7 @@ void HttpRequest::getbody()
     hasTransferEncoding = mheaders.find("Transfer-Encoding") != mheaders.end();
 
     if (hasContentLength && hasTransferEncoding)
-        throw BAD_REQUEST;
+        throw 6;
 
     if (!hasContentLength && !hasTransferEncoding) 
         throw LENGTH_REQUIRED;
