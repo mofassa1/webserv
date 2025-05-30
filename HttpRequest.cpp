@@ -54,39 +54,35 @@ void HttpRequest::split_line(const std::string &buffer, std::vector<std::string>
     }
 }
 
-bool HttpRequest::validstartline(std::vector<std::string> &vstart_line)
+void HttpRequest::validstartline()
 {
     if (vstart_line.size() != 7)
-        return false;
+        throw BAD_REQUEST;
+    if(vstart_line[0] != "GET" && vstart_line[0] != "DELETE" && vstart_line[0] != "POST")
+        throw BAD_REQUEST;
     if (vstart_line[1] != " ")
-        return false;
+        throw BAD_REQUEST;
     if (vstart_line[2][0] != '/')
-        return false;
+        throw BAD_REQUEST;
     if (vstart_line[3] != " ")
-        return false;
+        throw BAD_REQUEST;
     if (vstart_line[4] != "HTTP/1.1" && vstart_line[4] != "HTTP/1.0")
-        return false;
+        throw BAD_REQUEST;
     if (vstart_line[5] != "\r")
-        return false;
+        throw BAD_REQUEST;
     if (vstart_line[6] != "\n")
-        return false;
-    return true;
+        throw BAD_REQUEST;
+    
+    tstart_line.method = vstart_line[0];
+    tstart_line.url = vstart_line[2];
+    tstart_line.version = vstart_line[4];
 }
 
 void HttpRequest::start_line()
 {
     if (lines.empty())
         throw std::exception();
-    std::vector<std::string> vstart_line;
     split_line(lines[0], vstart_line);
-    if (!validstartline(vstart_line))
-        throw 1;
-    tstart_line.method = vstart_line[0];
-    std::cout << GREEN << "VSTART_line[2]: " << vstart_line[2] << COLOR_RESET << std::endl;
-    tstart_line.url = vstart_line[2];
-
-    tstart_line.version = vstart_line[4];
-    std::cout << GREEN << "- - - - - - VALID START LINE - - - - - - -" << COLOR_RESET << std::endl;
 }
 
 bool validheadername(const std::string &name)

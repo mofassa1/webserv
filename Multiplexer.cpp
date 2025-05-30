@@ -133,36 +133,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         c.BytesReaded += bytesReaded;
         c.server = clientOfServer[eventFd];      
         c.parse_request(eventFd);
-        std::cout << GREEN  << "URL: " << c.httpRequest.getUrl() << COLOR_RESET << std::endl;
         
-        ////////////////////////////////////////////////////
-
-        Server *courantServer = this->clientOfServer[eventFd];
-        size_t routesCount = courantServer->GetRoute().size();
-        route courantRoute;
-        bool  founded = false;
-
-        for (size_t i = 0; i < routesCount; i++)
-        {
-            if (courantServer->GetRoute()[i].GetPats()["path:"] == c.httpRequest.getUrl())
-            {
-                std::cout << GREEN << "MATCHED" << COLOR_RESET << std::endl;
-                courantRoute = courantServer->GetRoute()[i];
-                founded = true;
-                break ;
-            }
-        }
-        if (!founded)
-            throw 7;
-        // ///////////////////////////////////////// 
-        bool allowed = false;
-        c.allowed_methods = courantRoute.GetMethods();
-        for(size_t i = 0; i < c.allowed_methods.size(); i++){
-            if(c.httpRequest.getMethod() == c.allowed_methods[i])
-                allowed = true;
-        }
-        if(!allowed)
-            throw 8;
         /////////////////////////////////
         // struct epoll_event event;
         // event.events = EPOLLOUT | EPOLLET;

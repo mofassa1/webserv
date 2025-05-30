@@ -37,6 +37,7 @@ class Client
         int BytesReaded;
 
         void    parse_request(int fd);
+        void    GetServerMethods();
         Client();
         ~Client();
 };

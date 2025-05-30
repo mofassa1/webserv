@@ -32,11 +32,13 @@ private:
     std::vector<std::string> lines;
     t_start_line tstart_line;
     std::map<std::string, std::string> mheaders;
+    std::vector<std::string> vstart_line;
     
 public:
     HttpRequest();
     ~HttpRequest();
 
+    
     // Parsing functions
     
     bool    VALID_CRLN_CRLN(const std::string& buffer);
@@ -46,7 +48,7 @@ public:
     void    headers();
     void    getbody();
 
-    bool validstartline(std::vector<std::string> &vstart_line);
+    void validstartline();
     bool validheader(const std::vector<std::string> &vheader);
     // bool validbody(const std::string &line);
 
