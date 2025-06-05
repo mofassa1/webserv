@@ -1,6 +1,9 @@
 #include "HttpRequest.hpp"
 
-HttpRequest::HttpRequest()
+size_t HttpRequest::_Read_index_body = 0;
+
+HttpRequest::HttpRequest(): hasContentLength(false), hasTransferEncoding(false), 
+    reading_chunk_size(true), reading_chunk_data(false), chunk_done(false)
 {
 }
 
@@ -156,28 +159,156 @@ void HttpRequest::headers()
     // print_map(mheaders);
 }
 
-void HttpRequest::getbody()
-{   
+
+bool HttpRequest::validbody(const std::string& buffer){
     hasContentLength = mheaders.find("Content-Length") != mheaders.end();
     hasTransferEncoding = mheaders.find("Transfer-Encoding") != mheaders.end();
-
     if (hasContentLength && hasTransferEncoding)
-        throw 6;
+        throw BAD_REQUEST;
 
     if (!hasContentLength && !hasTransferEncoding) 
         throw LENGTH_REQUIRED;
-
-    if (hasTransferEncoding) {
-
+    
+    if(hasContentLength) {
+        char *end;
+        std::string content_length_str = mheaders["Content-Length"];
+        content_length = static_cast<size_t>(strtoul(content_length_str.c_str(), &end, 10));
+        if (content_length == 0 || *end != '\0')
+            throw BAD_REQUEST;
     }
-    if (hasContentLength && !hasTransferEncoding) {
+    initBodyReadIndex(buffer);
+    return true;
+}
 
+void HttpRequest::initBodyReadIndex(const std::string& buffer) {
+    const std::string delimiter = "\r\n\r\n";
+    size_t pos = buffer.find(delimiter);
+
+    // Body starts right after "\r\n\r\n"
+    _Read_index_body = pos + delimiter.length();
+}
+
+void HttpRequest::checkBodyCompletionOnEOF()
+{
+    if (hasContentLength && body_received < content_length)
+        throw BAD_REQUEST; // Incomplete body on EOF
+
+    if (hasTransferEncoding && !chunk_done)
+        throw BAD_REQUEST; // Incomplete chunked body on EOF
+}
+
+void HttpRequest::contentLength(const std::string &buffer, size_t bytesReaded)
+{
+    // Only read up to what was newly received
+    size_t buffer_end = _Read_index_body + bytesReaded;
+
+    size_t remaining_to_read = content_length - body_received;
+    size_t available = buffer_end - _Read_index_body;
+
+    if (available > remaining_to_read)
+        throw BAD_REQUEST; // body overflow
+
+    body.append(buffer, _Read_index_body, available);
+    _Read_index_body += available;
+    body_received += available;
+
+    if (body_received == content_length)
+    {
+        chunk_done = true;  // Body fully received
     }
-    if (!hasContentLength && hasTransferEncoding) {
-        // You can implement chunked decoding here
-        std::cout << GREEN << "Chunked transfer encoding detected (decoding not implemented yet)" << COLOR_RESET << std::endl;
-        return;
+}
+
+
+void HttpRequest::TransferEncoding(const std::string &buffer, size_t bytesReaded)
+{
+    (void)bytesReaded; // bytesReaded is not used in this function
+    while (_Read_index_body < buffer.size() && !chunk_done)
+    {
+        // Step 1: Read chunk size
+        if (reading_chunk_size)
+        {
+            while (_Read_index_body < buffer.size())
+            {
+                char c = buffer[_Read_index_body++];
+                if (c == '\r')
+                    continue;
+                if (c == '\n')
+                    break;
+                chunk_size_line += c;
+            }
+
+            // If full chunk size line was received
+            if (!chunk_size_line.empty() && buffer[_Read_index_body - 1] == '\n')
+            {
+                current_chunk_size = static_cast<size_t>(strtoul(chunk_size_line.c_str(), NULL, 16));
+                chunk_size_line.clear();
+
+                if (current_chunk_size == 0)
+                {
+                    chunk_done = true;
+                    reading_chunk_size = false;
+                    reading_chunk_data = false;
+                    return;
+                }
+
+                reading_chunk_size = false;
+                reading_chunk_data = true;
+            }
+            else
+            {
+                return; // wait for more data
+            }
+        }
+
+        // Step 2: Read chunk data
+        if (reading_chunk_data)
+        {
+            size_t remaining_in_buffer = buffer.size() - _Read_index_body;
+            size_t to_copy = std::min(current_chunk_size, remaining_in_buffer);
+
+            body.append(buffer, _Read_index_body, to_copy);
+            _Read_index_body += to_copy;
+            current_chunk_size -= to_copy;
+
+            if (current_chunk_size == 0)
+            {
+                reading_chunk_data = false;
+                reading_chunk_size = true;
+
+                // Skip CRLF after chunk
+                if (_Read_index_body + 1 < buffer.size() &&
+                    buffer[_Read_index_body] == '\r' &&
+                    buffer[_Read_index_body + 1] == '\n')
+                {
+                    _Read_index_body += 2;
+                }
+                else if (_Read_index_body < buffer.size() && buffer[_Read_index_body] == '\n')
+                {
+                    _Read_index_body += 1;
+                }
+                else
+                {
+                    return; // Wait for full CRLF after chunk
+                }
+            }
+            else
+            {
+                return; // Need more data to complete this chunk
+            }
+        }
     }
+}
+
+
+
+void HttpRequest::parsebody(const std::string& buffer, size_t bytesReaded)
+{   
+    if (bytesReaded == 0)
+        checkBodyCompletionOnEOF();
+    if (hasContentLength)
+        contentLength(buffer, bytesReaded);
+    else if (hasTransferEncoding)
+        TransferEncoding(buffer, bytesReaded);
 }
 
 
@@ -190,13 +321,13 @@ bool HttpRequest::VALID_CRLN_CRLN(const std::string &buffer)
     return false;
 }
 
-void HttpRequest::parseRequest(const std::string &buffer)
-{
-    storethebuffer(buffer);
-    //start_line();
-    headers();
-    getbody();
-}
+// void HttpRequest::parseRequest(const std::string &buffer)
+// {
+//     storethebuffer(buffer);
+//     //start_line();
+//     headers();
+//     getbody();
+// }
 
 std::string HttpRequest::getMethod() const
 {

@@ -36,7 +36,7 @@ void Client::GetServerMethods()
         throw 7;
 }
 
-void Client::parse_request(int fd)
+void Client::parse_request(int fd, size_t bytesReaded)
 {
     std::cout << GREEN << "[" << fd << "]" << " WAITING" << COLOR_RESET << std::endl;
     std::cout << RED << buffer << COLOR_RESET << std::endl;
@@ -59,14 +59,26 @@ void Client::parse_request(int fd)
     case request_headers:
         std::cout << GREEN << "[" << fd << "]" << COLOR_RESET << std::endl;
         httpRequest.headers();
-        state = request_body;
+        if (httpRequest.getMethod() == "POST" && httpRequest.validbody(buffer))
+            state = request_body;
+        else
+        {
+            state = done;
+            break;
+        }
         /* fall through */
     case request_body:
-        if (httpRequest.getMethod() == "POST")
-        {
-            httpRequest.getbody();
-            std::cout << GREEN << "get body" << std::endl;
-        }
+            httpRequest.parsebody(buffer, bytesReaded);
+            if(httpRequest.chunk_done)
+            {
+                state = done;
+                std::cout << GREEN << "[" << fd << "]" << " DONE" << COLOR_RESET << std::endl;
+                std::cout << RED << buffer << COLOR_RESET << std::endl;
+            }
+            else
+            {
+                std::cout << GREEN << "[" << fd << "]" << " WAITING FOR MORE DATA" << COLOR_RESET << std::endl;
+            }
         break;
     default:
         break;

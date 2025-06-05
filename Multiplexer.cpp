@@ -132,7 +132,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         c.buffer += buffer;
         c.BytesReaded += bytesReaded;
         c.server = clientOfServer[eventFd];      
-        c.parse_request(eventFd);
+        c.parse_request(eventFd, bytesReaded);
         
         /////////////////////////////////
         // struct epoll_event event;
@@ -178,7 +178,7 @@ void Multiplexer::handelResponse(int eventFd, confugParser &confug)
 
     std::cerr << "send succesfull for fd: " << eventFd << std::endl;
     struct epoll_event event;
-    event.events = EPOLLIN | EPOLLET;
+    event.events = EPOLLIN;
     event.data.fd = eventFd;
 
     if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1)
