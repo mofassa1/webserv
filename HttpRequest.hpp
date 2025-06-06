@@ -45,12 +45,11 @@ public:
     // Parsing functions
 
     bool VALID_CRLN_CRLN(const std::string &buffer);
-    void parseRequest(const std::string &buffer);
     void storethebuffer(const std::string &buffer);
     void start_line();
     void headers();
 
-    void parsebody(const std::string &buffer, size_t bytesReaded);
+    void parsebody(const std::string& buffer, size_t bytesReaded, size_t totalbytesReaded);
     void TransferEncoding(const std::string &buffer, size_t bytesReaded);
     void contentLength(const std::string &buffer, size_t bytesReaded);
 
@@ -75,7 +74,7 @@ public:
 
     void initBodyReadIndex(const std::string &buffer);
     void checkBodyCompletionOnEOF();
-    static size_t _Read_index_body;
+    size_t _Read_index_body;
     size_t content_length;
     size_t body_received;
 

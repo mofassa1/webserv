@@ -34,7 +34,7 @@ class Client
         std::vector<std::string> allowed_methods;
         Server *server;
         std::string buffer;
-        int BytesReaded;
+        size_t BytesReaded;
 
         void    parse_request(int fd, size_t bytesReaded);
         void    GetServerMethods();

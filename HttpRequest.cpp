@@ -1,8 +1,7 @@
 #include "HttpRequest.hpp"
 
-size_t HttpRequest::_Read_index_body = 0;
 
-HttpRequest::HttpRequest(): hasContentLength(false), hasTransferEncoding(false), 
+HttpRequest::HttpRequest(): hasContentLength(false), hasTransferEncoding(false), body_received(0),
     reading_chunk_size(true), reading_chunk_data(false), chunk_done(false)
 {
 }
@@ -155,8 +154,6 @@ void HttpRequest::headers()
             throw 5;
         vheaders.clear();
     }
-    std::cout << GREEN << "- - - - - - VALID HEADERS - - - - - -" << COLOR_RESET << std::endl;
-    // print_map(mheaders);
 }
 
 
@@ -164,7 +161,7 @@ bool HttpRequest::validbody(const std::string& buffer){
     hasContentLength = mheaders.find("Content-Length") != mheaders.end();
     hasTransferEncoding = mheaders.find("Transfer-Encoding") != mheaders.end();
     if (hasContentLength && hasTransferEncoding)
-        throw BAD_REQUEST;
+        throw 1;
 
     if (!hasContentLength && !hasTransferEncoding) 
         throw LENGTH_REQUIRED;
@@ -172,9 +169,11 @@ bool HttpRequest::validbody(const std::string& buffer){
     if(hasContentLength) {
         char *end;
         std::string content_length_str = mheaders["Content-Length"];
+        content_length_str.erase(0, content_length_str.find_first_not_of(" \t\r\n"));
+        content_length_str.erase(content_length_str.find_last_not_of(" \t\r\n") + 1);
         content_length = static_cast<size_t>(strtoul(content_length_str.c_str(), &end, 10));
         if (content_length == 0 || *end != '\0')
-            throw BAD_REQUEST;
+            throw 100;
     }
     initBodyReadIndex(buffer);
     return true;
@@ -190,31 +189,38 @@ void HttpRequest::initBodyReadIndex(const std::string& buffer) {
 
 void HttpRequest::checkBodyCompletionOnEOF()
 {
-    if (hasContentLength && body_received < content_length)
-        throw BAD_REQUEST; // Incomplete body on EOF
+    if (hasContentLength && !chunk_done)
+        throw 2; // Incomplete body on EOF
 
     if (hasTransferEncoding && !chunk_done)
-        throw BAD_REQUEST; // Incomplete chunked body on EOF
+        throw 3; // Incomplete chunked body on EOF
 }
 
-void HttpRequest::contentLength(const std::string &buffer, size_t bytesReaded)
+void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesReaded)
 {
-    // Only read up to what was newly received
-    size_t buffer_end = _Read_index_body + bytesReaded;
+    std::cout << totalbytesReaded << std::endl;
+    size_t remaining_to_read = content_length - body_received;  // The remaining body length to read
 
-    size_t remaining_to_read = content_length - body_received;
-    size_t available = buffer_end - _Read_index_body;
+    // Calculate how many bytes to read from the current position
+    size_t available = std::min(totalbytesReaded - _Read_index_body, remaining_to_read);  // Ensure we don't read beyond the required amount
 
-    if (available > remaining_to_read)
-        throw BAD_REQUEST; // body overflow
+    // If we have more bytes than expected (overflow), throw an error
+    if (body_received + available > content_length) {
+        throw 4; // Bad Request (overflow)
+    }
 
+    // Append the correct portion from the buffer starting from _Read_index_body
     body.append(buffer, _Read_index_body, available);
-    _Read_index_body += available;
-    body_received += available;
+    _Read_index_body += available;  // Update the index to the next unread position
+    body_received += available;    // Update the count of bytes successfully received
 
-    if (body_received == content_length)
-    {
-        chunk_done = true;  // Body fully received
+    std::cout << "[DEBUG] body_received: " << body_received << std::endl;
+    std::cout << "[DEBUG] _Read_index_body: " << _Read_index_body << std::endl;
+
+    // If we've received enough data, mark the chunk as done
+    if (body_received == content_length) {
+        chunk_done = true;
+        std::cout << "[DEBUG] Chunk done, body fully received" << std::endl;
     }
 }
 
@@ -301,14 +307,15 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t bytesReaded
 
 
 
-void HttpRequest::parsebody(const std::string& buffer, size_t bytesReaded)
-{   
+void HttpRequest::parsebody(const std::string& buffer, size_t bytesReaded, size_t totalbytesReaded)
+{  
+    std::cout << "bytesReaded: "<< bytesReaded << std::endl;
     if (bytesReaded == 0)
         checkBodyCompletionOnEOF();
     if (hasContentLength)
-        contentLength(buffer, bytesReaded);
+        contentLength(buffer, totalbytesReaded);
     else if (hasTransferEncoding)
-        TransferEncoding(buffer, bytesReaded);
+        TransferEncoding(buffer, totalbytesReaded);
 }
 
 
