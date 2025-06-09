@@ -294,6 +294,7 @@ void Multiplexer::run(confugParser &config)
             // Check if the event is for reading
             else if (events[i].events & EPOLLIN)
             {
+                client[eventFd].lastTime = get_time_ms();
                 char buffer[1024];
                 size_t bytesReaded = read(eventFd, buffer, 10);
 
@@ -315,6 +316,7 @@ void Multiplexer::run(confugParser &config)
             // Check if the event is for writting
             else if (events[i].events & EPOLLOUT)
             {
+                client[eventFd].lastTime = get_time_ms();
                 handelResponse(eventFd, config);
                 close(eventFd);
                 epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
