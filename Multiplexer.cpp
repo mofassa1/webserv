@@ -133,6 +133,16 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         c.BytesReaded += bytesReaded;
         c.server = clientOfServer[eventFd];
         c.parse_request(eventFd, bytesReaded);
+        if(c.state == done){
+            if(c.httpRequest.getMethod() == "GET")
+            {
+                
+            }
+
+            // if(c.httpRequest.getMethod() == "POST")
+            
+            // if(c.httpRequest.getMethod() == "DELETE")
+        }
 
         /////////////////////////////////
         // struct epoll_event event;

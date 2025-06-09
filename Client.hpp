@@ -25,9 +25,9 @@ enum Client_state{
 class Client
 {
     private:
-    Client_state state;
     
     public:
+        Client_state state;
         HttpRequest httpRequest;
         std::vector<route> routes;
         int index_route;
