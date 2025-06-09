@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 #include <sys/epoll.h>
 #include <algorithm>
-
+#include <sys/time.h>
 #include "HttpRequest.hpp"
 
 #define BUFFERSIZE 1000
@@ -27,10 +27,11 @@ class Client
     private:
     
     public:
+        long         lastTime;
         Client_state state;
-        HttpRequest httpRequest;
+        HttpRequest  httpRequest;
         std::vector<route> routes;
-        int index_route;
+        int          index_route;
         std::vector<std::string> allowed_methods;
         Server *server;
         std::string buffer;
@@ -40,4 +41,9 @@ class Client
         void    GetServerMethods();
         Client();
         ~Client();
+
+        Client(const Client& other);
+
+        // Copy assignment operator
+        Client& operator=(const Client& other);
 };

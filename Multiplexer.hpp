@@ -13,9 +13,10 @@
 #include <algorithm>
 #include <csignal>
 #include "Client.hpp"
+#include <sys/time.h>
 
 #define BUFFERSIZE 1000
-
+#define TIMEOUT    100
 class Multiplexer
 {
     private:
@@ -23,6 +24,7 @@ class Multiplexer
         std::map<int, Client> client;
         std::map<int, std::string> soketOfHost;
         std::map<int, Server*> clientOfServer;
+        std::vector<int> allClients; 
 
     public:
         Multiplexer(/* args */);

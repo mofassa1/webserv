@@ -2,6 +2,10 @@
 
 Client::Client() : state(waiting), index_route(-1), BytesReaded(0)
 { // Default constructor
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    lastTime = (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L);
+     
   // std::cout << "Client default constructor called" << std::endl;
 }
 
@@ -81,3 +85,34 @@ void Client::parse_request(int fd, size_t _Readed)
         break;
     }
 }
+
+Client::Client(const Client& other)
+{
+    lastTime = other.lastTime;
+    state = other.state;
+    httpRequest = other.httpRequest;
+    routes = other.routes;
+    index_route = other.index_route;
+    allowed_methods = other.allowed_methods;
+    server = other.server;  // Shallow copy
+    buffer = other.buffer;
+    BytesReaded = other.BytesReaded;
+}
+
+Client& Client::operator=(const Client& other)
+{
+    if (this != &other)
+    {
+        lastTime = other.lastTime;
+        state = other.state;
+        httpRequest = other.httpRequest;
+        routes = other.routes;
+        index_route = other.index_route;
+        allowed_methods = other.allowed_methods;
+        server = other.server;  // Shallow copy
+        buffer = other.buffer;
+        BytesReaded = other.BytesReaded;
+    }
+    return *this;
+}
+

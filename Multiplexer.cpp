@@ -111,6 +111,7 @@ int Multiplexer::NewClient(int eventFd)
     event.events = EPOLLIN;
     event.data.fd = clientFd;
     epoll_ctl(this->EpoleFd, EPOLL_CTL_ADD, clientFd, &event);
+    allClients.push_back(clientFd);
     return clientFd;
 }
 
@@ -210,6 +211,12 @@ void Multiplexer::handelResponse(int eventFd, confugParser &confug)
     }
 }
 
+long get_time_ms() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L);
+}
+
 void Multiplexer::run(confugParser &config)
 {
 
@@ -217,7 +224,45 @@ void Multiplexer::run(confugParser &config)
     {
 
         struct epoll_event events[1024];
-        int eventCount = epoll_wait(this->EpoleFd, events, 1024, -1);
+        int eventCount = epoll_wait(this->EpoleFd, events, 1024, 200);
+        for (size_t i = 0; i < allClients.size(); )
+        {
+            int fd = allClients[i];
+            std::map<int, Client>::iterator it = client.find(fd);
+
+            if (it != client.end())
+            {
+                Client& curClient = it->second;
+                double currenTime = get_time_ms();
+
+                if (currenTime - curClient.lastTime > TIMEOUT)
+                {
+                const char* timeoutResponse =
+                    "HTTP/1.1 408 Request Timeout\r\n"
+                    "Content-Type: text/html\r\n"
+                    "Content-Length: 98\r\n"
+                    "Connection: close\r\n"
+                    "\r\n"
+                    "<html><body><h1>408 Request Timeout</h1><p>Your request took too long. Please try again.</p></body></html>";
+
+                    
+                    send(fd, timeoutResponse, strlen(timeoutResponse), 0);
+                    close(fd);
+
+                    // Remove client from map and list
+                    config.removeClient(fd);
+                    clientOfServer.erase(fd);
+                
+
+                    client.erase(it);
+                    allClients.erase(allClients.begin() + i);
+                    epoll_ctl(EpoleFd, EPOLL_CTL_DEL, fd, NULL);
+                    continue; // Don't increment i, list shifted left
+                }
+            }
+
+            ++i; // Only increment if no erase happened
+        }
         if (eventCount == -1)
         {
             std::cerr << "epoll_wait failed" << std::endl;
@@ -237,6 +282,7 @@ void Multiplexer::run(confugParser &config)
                 if (clientSocket != -1)
                 {
                     config.newClient(clientSocket, eventFd);
+                    
                     size_t count = config.GetAllData().size();
                     for (size_t i = 0; i < count; i++)
                     {
