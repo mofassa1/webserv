@@ -37,6 +37,8 @@ private:
     std::map<std::string, std::string> mheaders;
     std::vector<std::string> vstart_line;
     std::string body;
+    std::string decoded_path;
+    std::map<std::string, std::string> query_params;
 
 public:
     HttpRequest();
@@ -49,6 +51,7 @@ public:
     void start_line();
     void headers();
 
+    void parseRequestUri(const std::string &Uri);
     void parsebody(const std::string& buffer, size_t bytesReaded, size_t totalbytesReaded);
     void TransferEncoding(const std::string &buffer, size_t bytesReaded);
     void contentLength(const std::string &buffer, size_t bytesReaded);
@@ -85,3 +88,11 @@ public:
     bool reading_chunk_data;
     bool chunk_done;
 };
+
+std::string decodePercentEncoding(const std::string &path);
+void parseParams(const std::string &query, std::map<std::string, std::string> Uri);
+bool isBadUriTraversal(const std::string &uri);
+bool isBadUri(const std::string &uri);
+char hexToChar(char high, char low);
+bool isHexDigit(char c);
+

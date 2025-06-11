@@ -134,16 +134,16 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         c.BytesReaded += bytesReaded;
         c.server = clientOfServer[eventFd];
         c.parse_request(eventFd, bytesReaded);
-        if(c.state == done){
-            if(c.httpRequest.getMethod() == "GET")
-            {
-                
-            }
-
+        if (c.state == done)
+        {
+            std::cout << GREEN << "[" << eventFd << "]" << "- - - - - - DONE - - - - - -" << COLOR_RESET << std::endl;
+            if (c.httpRequest.getMethod() == "GET")
             // if(c.httpRequest.getMethod() == "POST")
-            
+
             // if(c.httpRequest.getMethod() == "DELETE")
         }
+        else
+            std::cout << YELLOW << "[" << eventFd << "]" << "- - - - - - STILL ON PARSING - - - - - - -" << COLOR_RESET << std::endl;
 
         /////////////////////////////////
         // struct epoll_event event;
@@ -164,7 +164,6 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         clientOfServer.erase(eventFd);
         client.erase(eventFd);
         std::cout << "[" << eventFd << "]" << "- - - - - - - - CLOSED - - - - - -" << std::endl;
-
     }
     catch (std::exception &e)
     {
@@ -211,7 +210,8 @@ void Multiplexer::handelResponse(int eventFd, confugParser &confug)
     }
 }
 
-long get_time_ms() {
+long get_time_ms()
+{
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L);
@@ -225,34 +225,32 @@ void Multiplexer::run(confugParser &config)
 
         struct epoll_event events[1024];
         int eventCount = epoll_wait(this->EpoleFd, events, 1024, 200);
-        for (size_t i = 0; i < allClients.size(); )
+        for (size_t i = 0; i < allClients.size();)
         {
             int fd = allClients[i];
             std::map<int, Client>::iterator it = client.find(fd);
 
             if (it != client.end())
             {
-                Client& curClient = it->second;
+                Client &curClient = it->second;
                 double currenTime = get_time_ms();
 
                 if (currenTime - curClient.lastTime > TIMEOUT)
                 {
-                const char* timeoutResponse =
-                    "HTTP/1.1 408 Request Timeout\r\n"
-                    "Content-Type: text/html\r\n"
-                    "Content-Length: 98\r\n"
-                    "Connection: close\r\n"
-                    "\r\n"
-                    "<html><body><h1>408 Request Timeout</h1><p>Your request took too long. Please try again.</p></body></html>";
+                    const char *timeoutResponse =
+                        "HTTP/1.1 408 Request Timeout\r\n"
+                        "Content-Type: text/html\r\n"
+                        "Content-Length: 98\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                        "<html><body><h1>408 Request Timeout</h1><p>Your request took too long. Please try again.</p></body></html>";
 
-                    
                     send(fd, timeoutResponse, strlen(timeoutResponse), 0);
                     close(fd);
 
                     // Remove client from map and list
                     config.removeClient(fd);
                     clientOfServer.erase(fd);
-                
 
                     client.erase(it);
                     allClients.erase(allClients.begin() + i);
@@ -282,7 +280,7 @@ void Multiplexer::run(confugParser &config)
                 if (clientSocket != -1)
                 {
                     config.newClient(clientSocket, eventFd);
-                    
+
                     size_t count = config.GetAllData().size();
                     for (size_t i = 0; i < count; i++)
                     {

@@ -14,17 +14,17 @@ Client::~Client()
     // std::cout << "Client destructor called" << std::endl;
 }
 
-void Client::GetServerMethods()
+void Client::LocationCheck()
 {
     bool founded1 = false;
     bool founded2 = false;
-    httpRequest.validstartline();
 
     for (size_t i = 0; i < server->GetRoute().size(); i++)
     {
         if (server->GetRoute()[i].GetPats()["path:"] == httpRequest.getUrl())
         {
             allowed_methods = server->GetRoute()[i].GetMethods();
+            match = server->GetRoute()[i];
             founded1 = true;
             break;
         }
@@ -54,7 +54,8 @@ void Client::parse_request(int fd, size_t _Readed)
         /* fall through */
     case request_start_line:
         httpRequest.start_line();
-        GetServerMethods(); // 7alit feha gae machakil dyal URL
+        LocationCheck(); // dyal 3jina
+        // GetServerMethods(); // 7alit feha gae machakil dyal URL
         std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID START LINE - - - - - - -" << COLOR_RESET << std::endl;
         state = request_headers;
         /* fall through */
@@ -74,17 +75,19 @@ void Client::parse_request(int fd, size_t _Readed)
     case request_body:
         httpRequest.parsebody(buffer, _Readed, BytesReaded);
         if (httpRequest.chunk_done == true)
-        {
             state = done;
-            std::cout << GREEN << "[" << fd << "]" << "- - - - - - DONE - - - - - -" << COLOR_RESET << std::endl;
-        }
-        else
-            std::cout << GREEN << "[" << fd << "]" << "- - - - - - WAITING FOR MORE DATA - - - - - - -" << COLOR_RESET << std::endl;
         break;
     default:
         break;
     }
 }
+
+
+void Client::GET(){
+    
+}
+
+
 
 Client::Client(const Client& other)
 {

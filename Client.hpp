@@ -30,15 +30,16 @@ class Client
         long         lastTime;
         Client_state state;
         HttpRequest  httpRequest;
-        std::vector<route> routes;
-        int          index_route;
         std::vector<std::string> allowed_methods;
         Server *server;
+        route  match;
         std::string buffer;
         size_t BytesReaded;
 
         void    parse_request(int fd, size_t bytesReaded);
-        void    GetServerMethods();
+        void    LocationCheck();
+
+        void    GET();
         Client();
         ~Client();
 

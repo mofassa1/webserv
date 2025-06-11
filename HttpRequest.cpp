@@ -78,6 +78,7 @@ void HttpRequest::validstartline()
     tstart_line.method = vstart_line[0];
     tstart_line.url = vstart_line[2];
     tstart_line.version = vstart_line[4];
+    parseRequestUri(vstart_line[2]);
 }
 
 void HttpRequest::start_line()
@@ -85,6 +86,7 @@ void HttpRequest::start_line()
     if (lines.empty())
         throw std::exception();
     split_line(lines[0], vstart_line);
+    validstartline();
 }
 
 bool validheadername(const std::string &name)
@@ -167,7 +169,6 @@ bool HttpRequest::validbody(const std::string& buffer){
         throw LENGTH_REQUIRED;
     
     if(hasContentLength) {
-        std::cout << CYAN << "has content lenght" << COLOR_RESET << std::endl;
         char *end;
         std::string content_length_str = mheaders["Content-Length"];
         content_length_str.erase(0, content_length_str.find_first_not_of(" \t\r\n"));
@@ -177,9 +178,8 @@ bool HttpRequest::validbody(const std::string& buffer){
             throw 100;
     }
     if (hasTransferEncoding) {
-        std::cout << CYAN << "has transfer encoding" << COLOR_RESET << std::endl;
         if (mheaders["Transfer-Encoding"] != "chunked\r\n")
-            throw 101; // Unsupported Transfer-Encoding
+            throw 101; 
     }
     initBodyReadIndex(buffer);
     return true;
@@ -204,7 +204,6 @@ void HttpRequest::checkBodyCompletionOnEOF()
 
 void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesReaded)
 {
-    std::cout << "HERE " << CYAN << "contentLength" << COLOR_RESET << std::endl;
     size_t remaining_to_read = content_length - body_received;  // The remaining body length to read
 
     // Calculate how many bytes to read from the current position
@@ -227,7 +226,6 @@ void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesRead
 
 void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesReaded)
 {
-    std::cout << "HERE " << CYAN << "TransferEncoding" << COLOR_RESET << std::endl;
    (void)totalbytesReaded;
     while (_Read_index_body < buffer.size() && !chunk_done)
     {
@@ -307,7 +305,6 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
 }
 
 
-
 void HttpRequest::parsebody(const std::string& buffer, size_t bytesReaded, size_t totalbytesReaded)
 {  
     if (bytesReaded == 0)
@@ -318,6 +315,38 @@ void HttpRequest::parsebody(const std::string& buffer, size_t bytesReaded, size_
         TransferEncoding(buffer, totalbytesReaded);
 }
 
+void HttpRequest::parseRequestUri(const std::string &Uri){
+    std::string uri = Uri;
+
+    size_t scheme_pos = uri.find("://");
+    if (scheme_pos != std::string::npos) {
+        size_t path_start = uri.find('/', scheme_pos + 3);
+        if (path_start != std::string::npos)
+            uri = uri.substr(path_start);
+        else
+            uri = "/";
+    }
+
+    if (uri.empty() || uri[0] != '/')
+        throw BAD_REQUEST;
+
+    if (uri.length() > 2048)
+        throw 500;
+
+    if (isBadUri(uri) || isBadUriTraversal(uri))
+        throw BAD_REQUEST;
+
+    std::string path;
+    size_t qmark = uri.find('?');
+    if (qmark != std::string::npos) {
+        path = uri.substr(0, qmark);
+        std::string query = uri.substr(qmark + 1);
+        parseParams(query, query_params);
+    } else {
+        path = uri;
+    }
+    decoded_path = decodePercentEncoding(path);
+}
 
 bool HttpRequest::VALID_CRLN_CRLN(const std::string &buffer)
 {
