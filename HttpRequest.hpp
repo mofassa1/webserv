@@ -69,7 +69,7 @@ public:
 
     // Getters
     std::string getMethod() const;
-    std::string getUrl() const;
+    std::string getDecodedPath() const;
     std::string getVersion() const;
 
     bool hasContentLength;

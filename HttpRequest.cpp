@@ -362,10 +362,10 @@ std::string HttpRequest::getMethod() const
     return tstart_line.method;
 }
 
-std::string HttpRequest::getUrl() const
-{
-    return tstart_line.url;
+std::string HttpRequest::getDecodedPath() const{
+    return decoded_path;
 }
+
 
 std::string HttpRequest::getVersion() const
 {

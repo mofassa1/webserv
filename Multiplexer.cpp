@@ -137,6 +137,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         if (c.state == done)
         {
             std::cout << GREEN << "[" << eventFd << "]" << "- - - - - - DONE - - - - - -" << COLOR_RESET << std::endl;
+            c.LocationCheck(); // dyal 3jina
             if (c.httpRequest.getMethod() == "GET")
             // if(c.httpRequest.getMethod() == "POST")
 

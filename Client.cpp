@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client() : state(waiting), index_route(-1), BytesReaded(0)
+Client::Client() : state(waiting), BytesReaded(0)
 { // Default constructor
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -16,30 +16,46 @@ Client::~Client()
 
 void Client::LocationCheck()
 {
-    bool founded1 = false;
-    bool founded2 = false;
+    LocationMatch.path = httpRequest.getDecodedPath();
+    const std::vector<route>& routes = server->GetRoute();
 
-    for (size_t i = 0; i < server->GetRoute().size(); i++)
+    size_t best_match_len = 0;
+    bool match_found = false;
+
+    for (size_t i = 0; i < routes.size(); ++i)
     {
-        if (server->GetRoute()[i].GetPats()["path:"] == httpRequest.getUrl())
+        const std::string& route_path = server->GetRoute()[i].GetPats()["path:"];
+        if (LocationMatch.path.compare(0, route_path.length(), route_path) == 0 &&
+            (route_path.length() > best_match_len))
         {
-            allowed_methods = server->GetRoute()[i].GetMethods();
-            match = server->GetRoute()[i];
-            founded1 = true;
+            BestMatch = routes[i];
+            best_match_len = route_path.length();
+            match_found = true;
+        }
+    }
+
+    if (!match_found)
+        throw 404;
+
+    LocationMatch.methods = BestMatch.GetMethods();
+    bool method_allowed = false;
+    for (size_t i = 0; i <  LocationMatch.methods.size(); ++i)
+    {
+        if (LocationMatch.methods[i] == httpRequest.getMethod())
+        {
+            method_allowed = true;
             break;
         }
     }
-    if (!founded1)
-        throw 7;
 
-    for (size_t i = 0; i < allowed_methods.size(); i++)
-    {
-        if (allowed_methods[i] == httpRequest.getMethod())
-            founded2 = true;
-    }
-    if (!founded2)
-        throw 7;
+    if (!method_allowed)
+        throw 405;
+    //if(httpRequest.getMethod() == "POST")
+    // LocationMatch.upload_directory = BestMatch.getUpload_directory
+    // if upload_directory is empty throw error UNTHORIZED
+    // upload PATH 
 }
+
 
 void Client::parse_request(int fd, size_t _Readed)
 {
@@ -54,7 +70,7 @@ void Client::parse_request(int fd, size_t _Readed)
         /* fall through */
     case request_start_line:
         httpRequest.start_line();
-        LocationCheck(); // dyal 3jina
+
         // GetServerMethods(); // 7alit feha gae machakil dyal URL
         std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID START LINE - - - - - - -" << COLOR_RESET << std::endl;
         state = request_headers;
