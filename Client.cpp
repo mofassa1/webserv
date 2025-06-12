@@ -24,7 +24,7 @@ void Client::LocationCheck()
 
     for (size_t i = 0; i < routes.size(); ++i)
     {
-        const std::string& route_path = server->GetRoute()[i].GetPats()["path:"];
+        std::string route_path = server->GetRoute()[i].GetPats()["path:"];
         if (LocationMatch.path.compare(0, route_path.length(), route_path) == 0 &&
             (route_path.length() > best_match_len))
         {
@@ -104,15 +104,11 @@ void Client::GET(){
 }
 
 
-
 Client::Client(const Client& other)
 {
     lastTime = other.lastTime;
     state = other.state;
     httpRequest = other.httpRequest;
-    routes = other.routes;
-    index_route = other.index_route;
-    allowed_methods = other.allowed_methods;
     server = other.server;  // Shallow copy
     buffer = other.buffer;
     BytesReaded = other.BytesReaded;
@@ -125,9 +121,6 @@ Client& Client::operator=(const Client& other)
         lastTime = other.lastTime;
         state = other.state;
         httpRequest = other.httpRequest;
-        routes = other.routes;
-        index_route = other.index_route;
-        allowed_methods = other.allowed_methods;
         server = other.server;  // Shallow copy
         buffer = other.buffer;
         BytesReaded = other.BytesReaded;
