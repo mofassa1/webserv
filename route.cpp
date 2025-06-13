@@ -16,6 +16,12 @@ void route::Setcgi(std::string key, std::string value)
     this->cgi[key] = value;
 }
 
+void route::SetAutoIndex(void){
+    if (this->auto_index)
+        throw std::runtime_error("duplicated setting of autoIndex !!");
+    auto_index = true;
+}
+
 /// ////// Geters //////////
 
 std::map<std::string, std::string> route::GetPats(void)
@@ -32,10 +38,13 @@ std::map<std::string, std::string> route::GetCGI()
     return this->cgi;
 }
 
+bool route::GetAutoIndex(void){
+    return this->auto_index;
+}
 
 route::route()
 {
-
+    this->auto_index = false;
 }
 
 route::~route()

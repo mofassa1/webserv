@@ -8,13 +8,13 @@ server:
   port: 8888
   client_body_size_limit: 210149500
   server_name: test.com
-  auto_index: on
   default_error_pages:
     404: www/html/404.html
     403: www/html/403.html 
     501: www/html/501.html
     502: www/html/502.html
   route:
+    auto_index: on
     path: /uploads
     directory: ./www/scripts
     methods: GET POST
@@ -23,6 +23,7 @@ server:
     cgi:
       .php: /usr/bin/php-cgi
   route:
+    auto_index: OFF
     path: /
     directory: ./www/web
     methods: GET DELETE POST

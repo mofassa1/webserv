@@ -152,7 +152,7 @@ std::string confugParser::parseRoute(std::string line, Server *newServer, std::i
 
     while (std::getline(file, line))
     {
-        std::vector<std::string> words;
+        
 
         spacesCount = CountSpaces(line);
         if (spacesCount < 4)
@@ -161,15 +161,26 @@ std::string confugParser::parseRoute(std::string line, Server *newServer, std::i
             newServer->SetRoute(Newoute);
             return line;
         }
+        std::vector<std::string> words;
 
         words = splitBySpaces(line);
         if (words.empty() || words[0].empty())
             continue;
-        
-        if (spacesCount == 4 && words[0] == "methods:")
+        if (spacesCount == 4 && words[0] == "auto_index:")
         {
             if (words.size() == 1)
-                std::runtime_error(words[0] + " : must have a value !!!!!!!!!!");
+                throw std::runtime_error(words[0] + " must followed by a value !!!");
+            if (words.size() > 2 && words[2][0] != '#')
+                throw std::runtime_error(words[0] + " must be followed by one value");
+            if (words[1] == "ON" || words[1] == "on")
+                Newoute.SetAutoIndex();
+            else if (words[1] != "OFF" && words[1] != "off")
+                throw std::runtime_error("invalid value for 'auto_index:' keyWord !!" );
+        }
+        else if (spacesCount == 4 && words[0] == "methods:")
+        {
+            if (words.size() == 1)
+                throw std::runtime_error(words[0] + " : must have a value !!!!!!!!!!");
             for (size_t i = 0; i < words.size(); i++)
             {
                 Newoute.SetMethods(words[i]);
@@ -198,12 +209,12 @@ std::string confugParser::parseRoute(std::string line, Server *newServer, std::i
         }
         else if (spacesCount == 6 && inerscoop == "cgi" && words.size() == 2 && words[0][0] == '.')
         {
-            std::cerr << " 66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"  << std::endl;
+            // std::cerr << " 66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"  << std::endl;
             std::cerr << "cgi is setting with key : ' " << words[0] << " '" << "and the value :  " << words[1] << std::endl;
             Newoute.Setcgi(words[0], words[1]);
         }
         else
-            std::runtime_error("unown error in parsing !!!!!!!!!!");
+            std::runtime_error("unown error in configuration file !!!!!!!!!!");
     }
 
     //// i have to check in the route containing all the data before pushing it ///////
@@ -365,16 +376,7 @@ void confugParser::Parser(const std::string &PathToConfig) {
         }
         else
         {
-            if (spacesCount == 2 && words[0] == "auto_index:")
-            {
-                if (newServer->GetautoIndex())
-                    throw std::runtime_error("line duplicated !!");
-                if (words[1] == "ON" || words[1] == "on")
-                    newServer->OnAutoIndex();
-                else if (words[1] != "OFF" && words[1] != "off")
-                    throw std::runtime_error("Invalid input for auto index !!");
-            }
-            else if (LinearMap.count(spacesCount) && LinearMap[spacesCount].count(words[0]))
+            if (LinearMap.count(spacesCount) && LinearMap[spacesCount].count(words[0]))
             {
                 mapToLinearElement func = LinearMap[spacesCount][words[0]];
                 if (!func)

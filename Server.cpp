@@ -37,9 +37,6 @@ void Server::SetServerSocket(int socket)
     this->sockets.push_back(socket);
 }
 
-void Server::OnAutoIndex(void){
-    this->auto_index = true;
-}
 /// ////// Geters ///////////////
 
 std::string Server::GetHost(void){
@@ -66,14 +63,11 @@ std::vector<int> Server::GetServerSockets()
     return this->sockets;
 }
 
-bool Server::GetautoIndex(void){
-    return auto_index;
-}
+
 
 /////////// constructors ////////
 
 Server::Server() {
-    this->auto_index = false;
     this->host = "";
     this->client_body_size_limit = 0;
     this->server_name = "";
