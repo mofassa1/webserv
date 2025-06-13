@@ -137,25 +137,28 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         if (c.state == done)
         {
             std::cout << GREEN << "[" << eventFd << "]" << "- - - - - - DONE - - - - - -" << COLOR_RESET << std::endl;
+            std::cout << CYAN  << "[" << eventFd << "]\n" << c.buffer  << COLOR_RESET << std::endl;
             c.LocationCheck(); // dyal 3jina
             if (c.httpRequest.getMethod() == "GET")
-                c.GET();
+                c.Response = c.GET();
             // if(c.httpRequest.getMethod() == "POST")
 
             // if(c.httpRequest.getMethod() == "DELETE")
+
+                    /////////////////////////////////
+            struct epoll_event event;
+            event.events = EPOLLOUT | EPOLLET;
+            event.data.fd = eventFd;
+
+            if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1)
+            {
+                std::cerr << "epoll_ctl failed to modify event" << std::endl;
+            }
         }
         else
             std::cout << YELLOW << "[" << eventFd << "]" << "- - - - - - STILL ON PARSING - - - - - - -" << COLOR_RESET << std::endl;
 
-        /////////////////////////////////
-        // struct epoll_event event;
-        // event.events = EPOLLOUT | EPOLLET;
-        // event.data.fd = eventFd;
 
-        // if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1)
-        // {
-        //     std::cerr << "epoll_ctl failed to modify event" << std::endl;
-        // }
     }
     catch (int error)
     {
@@ -178,38 +181,49 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
     }
 }
 
-void Multiplexer::handelResponse(int eventFd, confugParser &confug)
+void Multiplexer::handelResponse(Client& client, int eventfd, confugParser &config)
 {
+    int fd = eventfd;
+    const ResponseInfos& response = client.Response;
+    std::ostringstream fullResponse;
 
-    if (eventFd == -1)
+    // Status line
+    fullResponse << "HTTP/1.1 " << response.status << " "
+                 << client.getStatusMessage(client.Response.status) << "\r\n";
+
+    // Headers
+    for (std::map<std::string, std::string>::const_iterator it = response.headers.begin();
+         it != response.headers.end(); ++it)
     {
-        std::cerr << "fd is invalid, connection closed?" << std::endl;
-        return;
+        fullResponse << it->first << ": " << it->second << "\r\n";
     }
 
-    // std::cout << "handelResponse of fd " << eventFd << std::endl;
-    std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, world!";
+    fullResponse << "Content-Length: " << response.body.length() << "\r\n";
+    fullResponse << "\r\n";  // End of headers
 
-    ssize_t bytesSent = send(eventFd, response.c_str(), response.size(), MSG_NOSIGNAL);
+    // Body
+    fullResponse << response.body;
+
+    std::string finalOutput = fullResponse.str();
+    ssize_t bytesSent = send(fd, finalOutput.c_str(), finalOutput.size(), 0);
 
     if (bytesSent == -1)
     {
-        std::cerr << "send failed for fd: " << eventFd << std::endl;
-        close(eventFd);
-        epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
-        confug.removeClient(eventFd);
-        return;
+        std::cerr << RED << "[" << fd << "] - Error while sending response." << COLOR_RESET << std::endl;
     }
-
-    std::cerr << "send succesfull for fd: " << eventFd << std::endl;
-    struct epoll_event event;
-    event.events = EPOLLIN;
-    event.data.fd = eventFd;
-
-    if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1)
+    else
     {
-        std::cerr << "epoll_ctl failed to modify event" << std::endl;
+        std::cout << GREEN << "[" << fd << "] - Sent " << bytesSent << " bytes." << COLOR_RESET << std::endl;
     }
+
+    // Close the connection after sending the response
+    close(fd);
+    epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, fd, NULL);
+    config.removeClient(fd);
+    clientOfServer.erase(fd);
+    this->client.erase(fd);
+
+    std::cout << "[" << fd << "] - Connection closed after sending response." << std::endl;
 }
 
 long get_time_ms()
@@ -317,7 +331,7 @@ void Multiplexer::run(confugParser &config)
             else if (events[i].events & EPOLLOUT)
             {
                 client[eventFd].lastTime = get_time_ms();
-                handelResponse(eventFd, config);
+                handelResponse(client[eventFd], eventFd, config);
                 close(eventFd);
                 epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
                 config.removeClient(eventFd);

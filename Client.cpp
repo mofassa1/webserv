@@ -1,12 +1,12 @@
 #include "Client.hpp"
 
-Client::Client() : state(waiting), BytesReaded(0)
+Client::Client() : state(waiting), BytesReaded(0), match_found(false)
 { // Default constructor
     struct timeval tv;
     gettimeofday(&tv, NULL);
     lastTime = (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L);
-     
-  // std::cout << "Client default constructor called" << std::endl;
+
+    // std::cout << "Client default constructor called" << std::endl;
 }
 
 Client::~Client()
@@ -17,10 +17,9 @@ Client::~Client()
 void Client::LocationCheck()
 {
     LocationMatch.path = httpRequest.getDecodedPath();
-    const std::vector<route>& routes = server->GetRoute();
+    const std::vector<route> &routes = server->GetRoute();
 
     size_t best_match_len = 0;
-    bool match_found = false;
 
     for (size_t i = 0; i < routes.size(); ++i)
     {
@@ -33,13 +32,11 @@ void Client::LocationCheck()
             match_found = true;
         }
     }
-
-    if (!match_found)
+    if(!match_found)
         throw 404;
-
     LocationMatch.methods = BestMatch.GetMethods();
     bool method_allowed = false;
-    for (size_t i = 0; i <  LocationMatch.methods.size(); ++i)
+    for (size_t i = 0; i < LocationMatch.methods.size(); ++i)
     {
         if (LocationMatch.methods[i] == httpRequest.getMethod())
         {
@@ -50,12 +47,20 @@ void Client::LocationCheck()
 
     if (!method_allowed)
         throw 405;
-    //if(httpRequest.getMethod() == "POST")
-    // LocationMatch.upload_directory = BestMatch.getUpload_directory
-    // if upload_directory is empty throw error UNTHORIZED
-    // upload PATH 
+    LocationMatch.directory = BestMatch.GetPats()["directory:"];
+    LocationMatch.autoindex = BestMatch.GetAutoIndex();
+    LocationMatch.index_file = BestMatch.GetPats()["index_file:"];
+    LocationMatch.cgi = BestMatch.GetCGI();
+    LocationMatch.Error_pages = server->GetDefaultERRPages();
+    if (httpRequest.getMethod() == "POST")
+    {
+        // GET FINAL URL
+        LocationMatch.upload_directory = BestMatch.GetPats()["upload_directory:"];
+        if (LocationMatch.upload_directory.empty())
+            throw 700;
+        // upload PATH
+    }
 }
-
 
 void Client::parse_request(int fd, size_t _Readed)
 {
@@ -78,7 +83,8 @@ void Client::parse_request(int fd, size_t _Readed)
     case request_headers:
         httpRequest.headers();
         std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID HEADERS - - - - - -" << COLOR_RESET << std::endl;
-        if (httpRequest.getMethod() == "POST" && httpRequest.validbody(buffer)){
+        if (httpRequest.getMethod() == "POST" && httpRequest.validbody(buffer))
+        {
             std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID BODY - - - - - - " << COLOR_RESET << std::endl;
             state = request_body;
         }
@@ -98,33 +104,138 @@ void Client::parse_request(int fd, size_t _Readed)
     }
 }
 
+ResponseInfos Client::GET()
+{
+    std::string full_path = LocationMatch.directory + LocationMatch.path;  // Build the full file path
 
-void Client::GET(){
-    
+    struct stat file_info;
+    if (stat(full_path.c_str(), &file_info) != 0)
+        throw 888;
+
+    if (S_ISDIR(file_info.st_mode))
+    {
+        if (!LocationMatch.index_file.empty())
+        {
+            std::string index_path = full_path  + LocationMatch.index_file;
+
+            struct stat index_info;
+            if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
+                return generateResponse(RESPONSE_FILE, index_path, 200, LocationMatch);
+        }
+        if (LocationMatch.autoindex)
+            return generateResponse(RESPONSE_DIRECTORY_LISTING, full_path, 200, LocationMatch);
+        else
+            throw 403; // forbidden
+    }
+    if (S_ISREG(file_info.st_mode))
+    {
+        if (access(full_path.c_str(), R_OK) != 0)
+            throw 403;  // Forbidden
+        
+        return generateResponse(RESPONSE_FILE, full_path, 200, LocationMatch);
+    }
+    throw 889;
 }
 
 
-Client::Client(const Client& other)
+Client::Client(const Client &other)
 {
     lastTime = other.lastTime;
     state = other.state;
     httpRequest = other.httpRequest;
-    server = other.server;  // Shallow copy
+    server = other.server; // Shallow copy
     buffer = other.buffer;
     BytesReaded = other.BytesReaded;
 }
 
-Client& Client::operator=(const Client& other)
+Client &Client::operator=(const Client &other)
 {
     if (this != &other)
     {
         lastTime = other.lastTime;
         state = other.state;
         httpRequest = other.httpRequest;
-        server = other.server;  // Shallow copy
+        server = other.server; // Shallow copy
         buffer = other.buffer;
         BytesReaded = other.BytesReaded;
     }
     return *this;
 }
 
+
+ResponseInfos Client::generateResponse(ResponseType type, const std::string& path, int statusCode, const S_LocationMatch& LocationMatch)
+{
+    ResponseInfos response;
+    response.status = statusCode;
+
+    (void)LocationMatch;
+    switch (type)
+    {
+        case RESPONSE_FILE:
+        {
+            std::ifstream file(path.c_str(), std::ios::binary);
+            if (!file)
+                throw 404;
+
+            std::ostringstream ss;
+            ss << file.rdbuf();
+            response.body = ss.str();
+            response.contentType = "text/html"; // You can make this dynamic based on extension
+
+            response.headers["Content-Type"] = response.contentType;
+            response.headers["Content-Length"] = to_string(response.body.size());
+            break;
+        }
+
+        case RESPONSE_ERROR:
+        {
+            break;
+        }
+
+        case RESPONSE_REDIRECT:
+        {
+            break;
+        }
+
+        case RESPONSE_DIRECTORY_LISTING:
+        {
+            // Just a demo, real version should dynamically generate a listing of files
+            // response.body = "<html><body><h1>Directory Listing</h1><ul><li>file1.txt</li><li>file2.txt</li></ul></body></html>";
+            // response.contentType = "text/html";
+            // response.headers["Content-Type"] = "text/html";
+            // response.headers["Content-Length"] = std::to_string(response.body.size());
+            break;
+        }
+        default:
+            throw 500; // Internal server error
+    }
+    return response;
+}
+
+std::string Client::getStatusMessage(int statusCode) {
+    switch (statusCode) {
+        case 200: return "OK";
+        case 201: return "Created";
+        case 202: return "Accepted";
+        case 204: return "No Content";
+
+        case 301: return "Moved Permanently";
+        case 302: return "Found";
+        case 303: return "See Other";
+        case 304: return "Not Modified";
+
+        case 400: return "Bad Request";
+        case 401: return "Unauthorized";
+        case 403: return "Forbidden";
+        case 404: return "Not Found";
+        case 405: return "Method Not Allowed";
+        case 408: return "Request Timeout";
+
+        case 500: return "Internal Server Error";
+        case 501: return "Not Implemented";
+        case 502: return "Bad Gateway";
+        case 503: return "Service Unavailable";
+
+        default: return "Unknown Status";
+    }
+}
