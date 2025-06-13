@@ -15,6 +15,7 @@ class Server
         std::string server_name;
         std::map<unsigned short, std::string> default_error_pages;
         std::vector<route> routs;
+        bool auto_index;
 
     public:
         //////////// Seters //////////
@@ -24,6 +25,7 @@ class Server
         void SetServerName(std::string value);
         void SetDefaultERRPages(unsigned short key, std::string value);
         void SetRoute(route Route);
+        void OnAutoIndex(void);
 
         ////
         void SetServerSocket(int socket);
@@ -36,6 +38,7 @@ class Server
         std::string GetServerName(void);
         std::map<unsigned short, std::string>  GetDefaultERRPages(void);
         std::vector<route> GetRoute(void);
+        bool GetautoIndex(void);
         
         ///////////// sokets ////////////
         std::vector<int> GetServerSockets();

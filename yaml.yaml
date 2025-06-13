@@ -8,6 +8,7 @@ server:
   port: 8888
   client_body_size_limit: 210149500
   server_name: test.com
+  auto_index: on
   default_error_pages:
     404: www/html/404.html
     403: www/html/403.html 
