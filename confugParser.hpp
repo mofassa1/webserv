@@ -2,8 +2,9 @@
 #include "route.hpp"
 #include "Server.hpp"
 
-
-
+#include <csignal>
+#include <cstdlib>
+#include <iostream>
 
 class confugParser
 {
@@ -24,7 +25,7 @@ class confugParser
         
         /////parsing functions (methods) for listed methods (confug file) /////
         std::string parseDERPAGES(std::string line, Server *newServer, std::ifstream &file);
-        std::string parseRoute(std::string line, Server *newServer, std::ifstream &file);
+        std::string parseRoute(std::string line1, Server *newServer, std::ifstream &file);
         // std::string parseCGI(std::string line, Server *newServer, std::ifstream &file);
 
         void ServerParser(Server *newServer);

@@ -72,11 +72,10 @@ void confugParser::ServerParser(Server *newServer)
 {
     if (newServer)
     {
-        /////// I need here to check is all data exist (finished parsing) , if not i have to throw an exiption 
         this->fileData.push_back(newServer);
     }
-    newServer = new Server();
 }
+
 
 void confugParser::Error(const std::vector<std::string> &words)
 {
@@ -140,9 +139,11 @@ std::string confugParser::parseDERPAGES(std::string line, Server *newServer, std
     return line;
 }
 
-std::string confugParser::parseRoute(std::string line, Server *newServer, std::ifstream &file)
+std::string confugParser::parseRoute(std::string line1, Server *newServer, std::ifstream &file)
 {
+    (void)line1;
     route Newoute;
+    std::string line = "";
     int spacesCount;
     std::string inerscoop = "route:";
 
@@ -243,72 +244,43 @@ void confugParser::parseCBSL(std::vector<std::string> &line, Server *newServer)
     if (line.size() != 2)
     {
         std::cerr << "Invalid arguiments count" << std::endl;
+        if (newServer)
+            delete newServer;
         Error(line);
     }
 
     if (newServer->Getclient_body_size_limit() != 0)
     {
         std::cerr << "client_body_size_limit doubled !!!!" << std::endl;
+        if (newServer)
+            delete newServer;
         Error(line);
     }
     size_t value = stringToint(line[1]);
 
     if (value <= 0)
+    {
+        if (newServer)
+            delete newServer;
         Error(line);
+    }
     
     newServer->Setclient_body_size_limit(value);
 }
 
 void confugParser::parseHost(std::vector<std::string> &line, Server *newServer)
 {
-    // if (!newServer)
-    //     throw std::runtime_error("the new server pointer is nullllll ");
-    // int dots = 0;
-    // int DigitIndex = 0;
-
-    // if (line.size() != 2)
-    //     Error(line);
-    
-    // for (size_t i = 0; i < line[1].size(); i++)
-    // {
-    //     if (dots > 3)
-    //         Error(line);
-    //     if (line[1][i] == '.')
-    //     {
-    //         DigitIndex = 0;
-    //         dots++;
-    //         if (i == 0)
-    //             Error(line);
-    //         if (!isdigit(line[1][i - 1]) || !isdigit(line[1][i + 1]))
-    //             Error(line);
-    //     }
-    //     else if (!isdigit(line[1][i]))
-    //             Error(line);
-    //     else
-    //     {
-    //         if (DigitIndex > 2)
-    //             Error(line);
-    //         if (DigitIndex == 0 && line[1][i] > 2)
-    //         {
-
-    //             Error(line);
-    //         }
-    //         if ((DigitIndex == 1 || DigitIndex == 2) && line[1][i] > 5)
-    //             Error(line);
-    //         DigitIndex++;
-    //     }
-    // }
-    
-    // if (dots != 3)
-    //     Error(line);
-
     newServer->SetHost(line[1]);
 }
 
 void confugParser::parsePort(std::vector<std::string> &line, Server *newServer)
 {
     if (line.size() != 2)
+    {
+        if (newServer)
+            delete newServer;
         Error(line);
+    }
     size_t value = stringToint(line[1]);
     if (value > 65535)
         throw std::runtime_error("Invalid port: out of range (0-65535)");
@@ -334,7 +306,11 @@ void confugParser::Parser(const std::string &PathToConfig) {
 
         spacesCount = CountSpaces(line);
         if (spacesCount % 2)
+        {
+            if (newServer)
+                delete newServer;
             throw std::runtime_error("invalid spaces count");
+        }
 
         words = splitBySpaces(line);
         
@@ -346,7 +322,11 @@ void confugParser::Parser(const std::string &PathToConfig) {
             std::cout << "#######################################################" << std::endl;
             std::cout << "the spaces count is : " << spacesCount << std::endl;
             if (spacesCount != 0)
+            {
+                if (newServer)
+                    delete newServer;
                 throw std::runtime_error("server should not start with spaces");
+            }
             if (newServer)
             {
                 /////// I need here to check is all data exist (finished parsing) , if not i have to throw an exiption 
@@ -362,8 +342,21 @@ void confugParser::Parser(const std::string &PathToConfig) {
             {
                 mapToListedElement func = ListedMap[spacesCount][words[0]];
                 if (!func)
+                {
+                    if (newServer)
+                        delete newServer;
                     Error(words);
-                line = (this->*func)(line, newServer, file);
+                }
+                try
+                {
+                    line = (this->*func)(line, newServer, file);
+                }
+                catch(const std::exception& e)
+                {
+                    if (newServer)
+                        delete newServer;
+                    throw std::runtime_error("");
+                }
                 if (line == "")
                 {
                     if (file.eof())
@@ -372,7 +365,11 @@ void confugParser::Parser(const std::string &PathToConfig) {
                 goto start;
             }
             else
+            {
+                if (newServer)
+                    delete newServer;
                 Error(words);
+            }
         }
         else
         {
@@ -380,11 +377,19 @@ void confugParser::Parser(const std::string &PathToConfig) {
             {
                 mapToLinearElement func = LinearMap[spacesCount][words[0]];
                 if (!func)
+                {
+                    if (newServer)
+                        delete newServer;
                     Error(words);
+                }
                 (this->*func)(words, newServer);
             }
             else
+            {
+                if (newServer)
+                    delete newServer;
                 Error(words);
+            }
         }
     }
 
