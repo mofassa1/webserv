@@ -20,6 +20,16 @@
 #define COLOR_RESET "\033[0m"
 
 #define BAD_REQUEST 400
+#define UNAUTHORIZED 401
+#define FORBIDDEN 403
+#define NOT_FOUND 404
+#define NOT_ALLOWED 405
+#define TIMEOUT 408
+#define INTERNAL 500
+#define NOT_IMPLEMENTED 501
+#define BADGATE 502
+#define SERVICE_UNVAILABLE 503
+#define UNKNOWN 0
 #define LENGTH_REQUIRED 411
 
 typedef struct s_start_line

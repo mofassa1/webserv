@@ -6,6 +6,7 @@ Client::Client() : state(waiting), BytesReaded(0), match_found(false)
     gettimeofday(&tv, NULL);
     lastTime = (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L);
 
+
     // std::cout << "Client default constructor called" << std::endl;
 }
 
@@ -167,7 +168,7 @@ std::string getFileExtension(const std::string &path)
     return "";
 }
 
-ResponseInfos Client::generateResponse(ResponseType type, const std::string &path, int statusCode, const S_LocationMatch &LocationMatch)
+ResponseInfos Client::generateResponse(ResponseType type, const std::string &path, int statusCode, S_LocationMatch &LocationMatch)
 {
     ResponseInfos response;
     response.status = statusCode;
@@ -184,24 +185,23 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         std::ostringstream ss;
         ss << file.rdbuf();
         response.body = ss.str();
-        std::map<std::string, std::string> mimeTypes = {
-            {".html", "text/html"},
-            {".htm", "text/html"},
-            {".css", "text/css"},
-            {".js", "application/javascript"},
-            {".json", "application/json"},
-            {".png", "image/png"},
-            {".jpg", "image/jpeg"},
-            {".jpeg", "image/jpeg"},
-            {".gif", "image/gif"},
-            {".svg", "image/svg+xml"},
-            {".ico", "image/x-icon"},
-            {".mp4", "video/mp4"},
-            {".pdf", "application/pdf"},
-            {".txt", "text/plain"},
-            {".php", "text/html"}, // for output after CGI
-            {".py", "text/html"},  // for output after CGI
-        };
+        std::map<std::string, std::string> mimeTypes;
+        mimeTypes[".html"] = "text/html";
+        mimeTypes[".htm"] = "text/html";
+        mimeTypes[".css"] = "text/css";
+        mimeTypes[".js"] = "application/javascript";
+        mimeTypes[".json"] = "application/json";
+        mimeTypes[".png"] = "image/png";
+        mimeTypes[".jpg"] = "image/jpeg";
+        mimeTypes[".jpeg"] = "image/jpeg";
+        mimeTypes[".gif"] = "image/gif";
+        mimeTypes[".svg"] = "image/svg+xml";
+        mimeTypes[".ico"] = "image/x-icon";
+        mimeTypes[".mp4"] = "video/mp4";
+        mimeTypes[".pdf"] = "application/pdf";
+        mimeTypes[".txt"] = "text/plain";
+        mimeTypes[".php"] = "text/html"; // for CGI
+        mimeTypes[".py"]  = "text/html"; // for CGI
         std::string ext = getFileExtension(path);
         if (mimeTypes.find(ext) != mimeTypes.end())
             response.contentType = mimeTypes[ext];
@@ -214,6 +214,34 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
 
     case RESPONSE_ERROR:
     {
+        std::string errorPagePath;
+        std::ifstream file;
+        std::ostringstream ss;
+        unsigned short statusCode = static_cast<unsigned short>(response.status);
+
+        // Check if a custom error page is defined for the status code
+        if (LocationMatch.Error_pages.count(statusCode))
+        {
+            errorPagePath = LocationMatch.Error_pages[statusCode];
+            file.open(errorPagePath.c_str(), std::ios::binary);
+        }
+        // If not found or not openable, fallback to default content
+        if (!file.is_open())
+        {
+            std::string message = Client::getStatusMessage(response.status); // like "Not Found"
+            ss << "<html><head><title>" << response.status << " " << message << "</title></head>";
+            ss << "<body><h1>" << response.status << " - " << message << "</h1></body></html>";
+            response.body = ss.str();
+        }
+        else
+        {
+            ss << file.rdbuf();
+            response.body = ss.str();
+        }
+
+        response.contentType = "text/html";
+        response.headers["Content-Type"] = response.contentType;
+        response.headers["Content-Length"] = to_string(response.body.size());
         break;
     }
 

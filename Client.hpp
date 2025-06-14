@@ -93,7 +93,7 @@ class Client
         // Copy assignment operator
         Client& operator=(const Client& other);
 
-        static ResponseInfos generateResponse(ResponseType type,  const std::string& path, int statusCode, const S_LocationMatch& LocationMatch);
+        static ResponseInfos generateResponse(ResponseType type,  const std::string& path, int statusCode, S_LocationMatch& LocationMatch);
         static std::string getStatusMessage(int statusCode);
 };
 
