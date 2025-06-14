@@ -11,12 +11,12 @@ int Multiplexer::create_server_socket(unsigned short currentPort, std::string ho
 
     //// I need first to check is already have a server with the same host , Port ///////
 
-    static std::vector<std::pair<unsigned short, std::string> > binded;
+    static std::vector<std::pair<unsigned short, std::string>> binded;
     static std::map<std::pair<unsigned short, std::string>, int> socketServer;
 
     bool found = false;
     std::pair<unsigned short, std::string> key_to_find = std::make_pair(currentPort, host);
-    for (std::vector<std::pair<unsigned short, std::string> >::iterator it = binded.begin(); it != binded.end(); ++it)
+    for (std::vector<std::pair<unsigned short, std::string>>::iterator it = binded.begin(); it != binded.end(); ++it)
     {
         if (it->first == key_to_find.first && it->second == key_to_find.second)
         {
@@ -120,6 +120,18 @@ bool AreYouNew(int client_sockfd, std::map<int, Client> &clients)
     return clients.find(client_sockfd) == clients.end();
 }
 
+void epoll_change(int &EpoleFd, int &eventFd)
+{
+    struct epoll_event event;
+    event.events = EPOLLOUT | EPOLLET;
+    event.data.fd = eventFd;
+
+    if (epoll_ctl(EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1)
+    {
+        std::cerr << "epoll_ctl failed to modify event" << std::endl;
+    }
+}
+
 void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesReaded, confugParser &config)
 {
     try
@@ -137,32 +149,29 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         if (c.state == done)
         {
             std::cout << GREEN << "[" << eventFd << "]" << "- - - - - - DONE - - - - - -" << COLOR_RESET << std::endl;
-            std::cout << CYAN  << "[" << eventFd << "]\n" << c.buffer  << COLOR_RESET << std::endl;
-            c.LocationCheck(); // dyal 3jina
+            std::cout << CYAN << "[" << eventFd << "]\n"
+                      << c.buffer << COLOR_RESET << std::endl;
+            c.LocationCheck();
             if (c.httpRequest.getMethod() == "GET")
                 c.Response = c.GET();
             // if(c.httpRequest.getMethod() == "POST")
 
             // if(c.httpRequest.getMethod() == "DELETE")
 
-                    /////////////////////////////////
-            struct epoll_event event;
-            event.events = EPOLLOUT | EPOLLET;
-            event.data.fd = eventFd;
-
-            if (epoll_ctl(this->EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1)
-            {
-                std::cerr << "epoll_ctl failed to modify event" << std::endl;
-            }
+            /////////////////////////////////
+            epoll_change(this->EpoleFd, eventFd);
         }
         else
             std::cout << YELLOW << "[" << eventFd << "]" << "- - - - - - STILL ON PARSING - - - - - - -" << COLOR_RESET << std::endl;
-
-
     }
     catch (int error)
     {
         std::cerr << RED << "[" << eventFd << "]" << "- - - - - ERROR: " << error << "- - - - - - - - " << COLOR_RESET << std::endl;
+        client[eventFd].Response = Client::generateResponse(RESPONSE_ERROR, "", error, client[eventFd].LocationMatch);
+    }
+    catch (std::exception &e)
+    {
+        std::cerr << RED << "- - - - - Error in handle_request: " << e.what() << COLOR_RESET << std::endl;
         close(eventFd);
         epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
         config.removeClient(eventFd);
@@ -170,21 +179,12 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         client.erase(eventFd);
         std::cout << "[" << eventFd << "]" << "- - - - - - - - CLOSED - - - - - -" << std::endl;
     }
-    catch (std::exception &e)
-    {
-        std::cerr << RED << "- - - - - Error in parse_request: " << e.what() << COLOR_RESET << std::endl;
-        close(eventFd);
-        epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
-        config.removeClient(eventFd);
-        clientOfServer.erase(eventFd);
-        client.erase(eventFd);
-    }
 }
 
-void Multiplexer::handelResponse(Client& client, int eventfd, confugParser &config)
+void Multiplexer::handelResponse(Client &client, int eventfd, confugParser &config)
 {
     int fd = eventfd;
-    const ResponseInfos& response = client.Response;
+    const ResponseInfos &response = client.Response;
     std::ostringstream fullResponse;
 
     // Status line
@@ -199,7 +199,7 @@ void Multiplexer::handelResponse(Client& client, int eventfd, confugParser &conf
     }
 
     fullResponse << "Content-Length: " << response.body.length() << "\r\n";
-    fullResponse << "\r\n";  // End of headers
+    fullResponse << "\r\n"; // End of headers
 
     // Body
     fullResponse << response.body;
@@ -336,6 +336,7 @@ void Multiplexer::run(confugParser &config)
                 epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
                 config.removeClient(eventFd);
                 clientOfServer.erase(eventFd);
+                std::cout << "[" << eventFd << "]" << "- - - - - - - - CLOSED - - - - - -" << std::endl;
             }
         }
     }

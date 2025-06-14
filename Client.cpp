@@ -32,7 +32,7 @@ void Client::LocationCheck()
             match_found = true;
         }
     }
-    if(!match_found)
+    if (!match_found)
         throw 404;
     LocationMatch.methods = BestMatch.GetMethods();
     bool method_allowed = false;
@@ -75,8 +75,6 @@ void Client::parse_request(int fd, size_t _Readed)
         /* fall through */
     case request_start_line:
         httpRequest.start_line();
-
-        // GetServerMethods(); // 7alit feha gae machakil dyal URL
         std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID START LINE - - - - - - -" << COLOR_RESET << std::endl;
         state = request_headers;
         /* fall through */
@@ -106,7 +104,7 @@ void Client::parse_request(int fd, size_t _Readed)
 
 ResponseInfos Client::GET()
 {
-    std::string full_path = LocationMatch.directory + LocationMatch.path;  // Build the full file path
+    std::string full_path = LocationMatch.directory + LocationMatch.path; // Build the full file path
 
     struct stat file_info;
     if (stat(full_path.c_str(), &file_info) != 0)
@@ -116,7 +114,7 @@ ResponseInfos Client::GET()
     {
         if (!LocationMatch.index_file.empty())
         {
-            std::string index_path = full_path  + LocationMatch.index_file;
+            std::string index_path = full_path + LocationMatch.index_file;
 
             struct stat index_info;
             if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
@@ -130,13 +128,12 @@ ResponseInfos Client::GET()
     if (S_ISREG(file_info.st_mode))
     {
         if (access(full_path.c_str(), R_OK) != 0)
-            throw 403;  // Forbidden
-        
+            throw 403; // Forbidden
+
         return generateResponse(RESPONSE_FILE, full_path, 200, LocationMatch);
     }
     throw 889;
 }
-
 
 Client::Client(const Client &other)
 {
@@ -162,8 +159,15 @@ Client &Client::operator=(const Client &other)
     return *this;
 }
 
+std::string getFileExtension(const std::string &path)
+{
+    size_t dotPos = path.rfind('.');
+    if (dotPos != std::string::npos)
+        return path.substr(dotPos);
+    return "";
+}
 
-ResponseInfos Client::generateResponse(ResponseType type, const std::string& path, int statusCode, const S_LocationMatch& LocationMatch)
+ResponseInfos Client::generateResponse(ResponseType type, const std::string &path, int statusCode, const S_LocationMatch &LocationMatch)
 {
     ResponseInfos response;
     response.status = statusCode;
@@ -171,71 +175,113 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string& pat
     (void)LocationMatch;
     switch (type)
     {
-        case RESPONSE_FILE:
-        {
-            std::ifstream file(path.c_str(), std::ios::binary);
-            if (!file)
-                throw 404;
+    case RESPONSE_FILE:
+    {
+        std::ifstream file(path.c_str(), std::ios::binary);
+        if (!file)
+            throw 404;
 
-            std::ostringstream ss;
-            ss << file.rdbuf();
-            response.body = ss.str();
-            response.contentType = "text/html"; // You can make this dynamic based on extension
+        std::ostringstream ss;
+        ss << file.rdbuf();
+        response.body = ss.str();
+        std::map<std::string, std::string> mimeTypes = {
+            {".html", "text/html"},
+            {".htm", "text/html"},
+            {".css", "text/css"},
+            {".js", "application/javascript"},
+            {".json", "application/json"},
+            {".png", "image/png"},
+            {".jpg", "image/jpeg"},
+            {".jpeg", "image/jpeg"},
+            {".gif", "image/gif"},
+            {".svg", "image/svg+xml"},
+            {".ico", "image/x-icon"},
+            {".mp4", "video/mp4"},
+            {".pdf", "application/pdf"},
+            {".txt", "text/plain"},
+            {".php", "text/html"}, // for output after CGI
+            {".py", "text/html"},  // for output after CGI
+        };
+        std::string ext = getFileExtension(path);
+        if (mimeTypes.find(ext) != mimeTypes.end())
+            response.contentType = mimeTypes[ext];
+        else
+            response.contentType = "application/octet-stream"; // fallback for unknown types
+        response.headers["Content-Type"] = response.contentType;
+        response.headers["Content-Length"] = to_string(response.body.size());
+        break;
+    }
 
-            response.headers["Content-Type"] = response.contentType;
-            response.headers["Content-Length"] = to_string(response.body.size());
-            break;
-        }
+    case RESPONSE_ERROR:
+    {
+        break;
+    }
 
-        case RESPONSE_ERROR:
-        {
-            break;
-        }
+    case RESPONSE_REDIRECT:
+    {
+        break;
+    }
 
-        case RESPONSE_REDIRECT:
-        {
-            break;
-        }
-
-        case RESPONSE_DIRECTORY_LISTING:
-        {
-            // Just a demo, real version should dynamically generate a listing of files
-            // response.body = "<html><body><h1>Directory Listing</h1><ul><li>file1.txt</li><li>file2.txt</li></ul></body></html>";
-            // response.contentType = "text/html";
-            // response.headers["Content-Type"] = "text/html";
-            // response.headers["Content-Length"] = std::to_string(response.body.size());
-            break;
-        }
-        default:
-            throw 500; // Internal server error
+    case RESPONSE_DIRECTORY_LISTING:
+    {
+        // Just a demo, real version should dynamically generate a listing of files
+        // response.body = "<html><body><h1>Directory Listing</h1><ul><li>file1.txt</li><li>file2.txt</li></ul></body></html>";
+        // response.contentType = "text/html";
+        // response.headers["Content-Type"] = "text/html";
+        // response.headers["Content-Length"] = std::to_string(response.body.size());
+        break;
+    }
+    default:
+        throw 500; // Internal server error
     }
     return response;
 }
 
-std::string Client::getStatusMessage(int statusCode) {
-    switch (statusCode) {
-        case 200: return "OK";
-        case 201: return "Created";
-        case 202: return "Accepted";
-        case 204: return "No Content";
+std::string Client::getStatusMessage(int statusCode)
+{
+    switch (statusCode)
+    {
+    case 200:
+        return "OK";
+    case 201:
+        return "Created";
+    case 202:
+        return "Accepted";
+    case 204:
+        return "No Content";
 
-        case 301: return "Moved Permanently";
-        case 302: return "Found";
-        case 303: return "See Other";
-        case 304: return "Not Modified";
+    case 301:
+        return "Moved Permanently";
+    case 302:
+        return "Found";
+    case 303:
+        return "See Other";
+    case 304:
+        return "Not Modified";
 
-        case 400: return "Bad Request";
-        case 401: return "Unauthorized";
-        case 403: return "Forbidden";
-        case 404: return "Not Found";
-        case 405: return "Method Not Allowed";
-        case 408: return "Request Timeout";
+    case 400:
+        return "Bad Request";
+    case 401:
+        return "Unauthorized";
+    case 403:
+        return "Forbidden";
+    case 404:
+        return "Not Found";
+    case 405:
+        return "Method Not Allowed";
+    case 408:
+        return "Request Timeout";
 
-        case 500: return "Internal Server Error";
-        case 501: return "Not Implemented";
-        case 502: return "Bad Gateway";
-        case 503: return "Service Unavailable";
+    case 500:
+        return "Internal Server Error";
+    case 501:
+        return "Not Implemented";
+    case 502:
+        return "Bad Gateway";
+    case 503:
+        return "Service Unavailable";
 
-        default: return "Unknown Status";
+    default:
+        return "Unknown Status";
     }
 }

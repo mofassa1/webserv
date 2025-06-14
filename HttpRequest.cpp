@@ -196,40 +196,35 @@ void HttpRequest::initBodyReadIndex(const std::string& buffer) {
 void HttpRequest::checkBodyCompletionOnEOF()
 {
     if (hasContentLength && !chunk_done)
-        throw 2; // Incomplete body on EOF
+        throw 2;
 
     if (hasTransferEncoding && !chunk_done)
-        throw 3; // Incomplete chunked body on EOF
+        throw 3;
 }
 
 void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesReaded)
 {
-    size_t remaining_to_read = content_length - body_received;  // The remaining body length to read
+    size_t remaining_to_read = content_length - body_received;
+    size_t available = std::min(totalbytesReaded - _Read_index_body, remaining_to_read);
 
-    // Calculate how many bytes to read from the current position
-    size_t available = std::min(totalbytesReaded - _Read_index_body, remaining_to_read);  // Ensure we don't read beyond the required amount
-
-    // If we have more bytes than expected (overflow), throw an error
     if (body_received + available > content_length) {
-        throw 4; // Bad Request (overflow)
+        throw 4;
     }
 
     body.append(buffer, _Read_index_body, available);
     _Read_index_body += available;
     body_received += available;
 
-    if (body_received == content_length) {
-        chunk_done = true;
+    if (body_received == content_length) { // rader muchkil 
+        chunk_done = true; 
     }
 }
-
 
 void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesReaded)
 {
    (void)totalbytesReaded;
     while (_Read_index_body < buffer.size() && !chunk_done)
     {
-        // Step 1: Read chunk size
         if (reading_chunk_size)
         {
             while (_Read_index_body < buffer.size())
@@ -241,11 +236,9 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
                     break;
                 chunk_size_line += c;
             }
-
-            // If full chunk size line was received
             if (!chunk_size_line.empty() && buffer[_Read_index_body - 1] == '\n')
             {
-                current_chunk_size = static_cast<size_t>(strtoul(chunk_size_line.c_str(), NULL, 16));
+                current_chunk_size = static_cast<size_t>(strtoul(chunk_size_line.c_str(), NULL, 16)); // rader muchkil i guess, blan dyal ss.fail()
                 chunk_size_line.clear();
 
                 if (current_chunk_size == 0)
@@ -261,11 +254,9 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
             }
             else
             {
-                return; // wait for more data
+                return;
             }
         }
-
-        // Step 2: Read chunk data
         if (reading_chunk_data)
         {
             size_t remaining_in_buffer = buffer.size() - _Read_index_body;
@@ -280,7 +271,6 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
                 reading_chunk_data = false;
                 reading_chunk_size = true;
 
-                // Skip CRLF after chunk
                 if (_Read_index_body + 1 < buffer.size() &&
                     buffer[_Read_index_body] == '\r' &&
                     buffer[_Read_index_body + 1] == '\n')
@@ -293,12 +283,12 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
                 }
                 else
                 {
-                    return; // Wait for full CRLF after chunk
+                    return; 
                 }
             }
             else
             {
-                return; // Need more data to complete this chunk
+                return;
             }
         }
     }

@@ -10,3 +10,9 @@
 
 ->PARSE OF URL
 
+need to add the body size max in body parsing.
+- content lenght probleme
+// rader muchkil i guess, blan dyal ss.fail() f transfer encoding
+
+
+fix error status for each message 
