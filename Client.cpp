@@ -1,5 +1,5 @@
 #include "Client.hpp"
-
+#include <sys/wait.h>
 Client::Client() : state(waiting), BytesReaded(0), match_found(false)
 { // Default constructor
     struct timeval tv;
@@ -128,12 +128,70 @@ ResponseInfos Client::GET()
     }
     if (S_ISREG(file_info.st_mode))
     {
+        std::string file_extension = getFileExtension(full_path);
+        if (LocationMatch.cgi.find(file_extension) != LocationMatch.cgi.end())
+        {
+            std::string cgi_path = LocationMatch.cgi[file_extension];
+            return executeCGI(cgi_path, full_path);
+        }
+
         if (access(full_path.c_str(), R_OK) != 0)
             throw 403; // Forbidden
 
         return generateResponse(RESPONSE_FILE, full_path, 200, LocationMatch);
     }
     throw 889;
+}
+
+ResponseInfos Client::executeCGI(const std::string &cgi_path, const std::string &script_path)
+{
+    int pipefd[2];
+    if (pipe(pipefd) == -1)
+        throw 500; // Internal Server Error
+
+    pid_t pid = fork();
+    if (pid == -1)
+        throw 500; // Internal Server Error
+
+    if (pid == 0)
+    {
+        // Child process
+        close(pipefd[0]); // Close read end
+        dup2(pipefd[1], STDOUT_FILENO); // Redirect stdout to pipe
+        close(pipefd[1]);
+
+        char *env[] = {
+            const_cast<char *>("REQUEST_METHOD=GET"),
+            const_cast<char *>(std::string("SCRIPT_FILENAME=" + script_path).c_str()),
+            NULL};
+
+        execl(cgi_path.c_str(), cgi_path.c_str(), NULL, env);
+        exit(1); // If execl fails
+    }
+    else
+    {
+        // Parent process
+        close(pipefd[1]); // Close write end
+        char buffer[1024];
+        ssize_t bytesRead;
+        std::ostringstream response_body;
+
+        while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
+        {
+            response_body.write(buffer, bytesRead);
+        }
+
+        close(pipefd[0]);
+        waitpid(pid, NULL, 0); // Wait for child process to finish
+
+        ResponseInfos response;
+        response.status = 200;
+        response.body = response_body.str();
+        response.contentType = "text/html";
+        response.headers["Content-Type"] = response.contentType;
+        response.headers["Content-Length"] = to_string(response.body.size());
+        return response;
+    }
 }
 
 Client::Client(const Client &other)

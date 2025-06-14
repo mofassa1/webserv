@@ -70,6 +70,8 @@ class Client
     private:
     
     public:
+    ResponseInfos executeCGI(const std::string &cgi_path, const std::string &script_path);
+
         long         lastTime;
         Client_state state;
         HttpRequest  httpRequest;

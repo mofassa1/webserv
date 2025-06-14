@@ -132,6 +132,7 @@ void epoll_change(int &EpoleFd, int &eventFd)
     }
 }
 
+
 void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesReaded, confugParser &config)
 {
     try

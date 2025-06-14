@@ -35,6 +35,7 @@ class Multiplexer
         bool    isServerSocket(int fd);
         void    handelRequest(int eventFd, std::string buffer, size_t bytesReaded, confugParser &config);
         void    handelResponse(Client& client, int eventfd, confugParser &confug);
+        void executeCGI(int eventFd, const std::string &cgiPath, const std::string &requestBody);
         /// //// signal handeler /////////
 
         std::vector <int> fileDiscriptors;
