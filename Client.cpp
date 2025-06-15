@@ -51,7 +51,7 @@ void Client::LocationCheck()
     LocationMatch.directory = BestMatch.GetPats()["directory:"];
     LocationMatch.autoindex = BestMatch.GetAutoIndex();
     LocationMatch.index_file = BestMatch.GetPats()["index_file:"];
-    LocationMatch.cgi = BestMatch.GetCGI();
+    LocationMatch.cgi = BestMatch.GetCGI(); 
     LocationMatch.Error_pages = server->GetDefaultERRPages();
     if (httpRequest.getMethod() == "POST")
     {

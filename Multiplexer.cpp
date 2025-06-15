@@ -154,7 +154,9 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
             c.LocationCheck();
             if (c.httpRequest.getMethod() == "GET")
                 c.Response = c.GET();
-            // if(c.httpRequest.getMethod() == "POST")
+            // if(c.httpRequest.getMethod() == "POST"){
+
+            // }
 
             // if(c.httpRequest.getMethod() == "DELETE")
 
@@ -167,7 +169,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
     catch (int error)
     {
         std::cerr << RED << "[" << eventFd << "]" << "- - - - - ERROR: " << error << "- - - - - - - - " << COLOR_RESET << std::endl;
-        client[eventFd].Response = Client::generateResponse(RESPONSE_ERROR, "", error, client[eventFd].LocationMatch);
+        client[eventFd].Response = Client::generateResponse(RESPONSE_ERROR, "./www/web/html", error, client[eventFd].LocationMatch);
     }
     catch (std::exception &e)
     {
@@ -197,14 +199,14 @@ void Multiplexer::handelResponse(Client &client, int eventfd, confugParser &conf
     {
         fullResponse << it->first << ": " << it->second << "\r\n";
     }
-
-    fullResponse << "Content-Length: " << response.body.length() << "\r\n";
-    fullResponse << "\r\n"; // End of headers
+    
+    fullResponse << "\r\n";
 
     // Body
     fullResponse << response.body;
 
     std::string finalOutput = fullResponse.str();
+    std::cout << finalOutput.c_str();
     ssize_t bytesSent = send(fd, finalOutput.c_str(), finalOutput.size(), 0);
 
     if (bytesSent == -1)
