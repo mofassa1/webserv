@@ -108,16 +108,18 @@ ResponseInfos Client::GET()
     std::string full_path = LocationMatch.directory + LocationMatch.path; // Build the full file path
 
     struct stat file_info;
+    std::cerr << YELLOW <<  full_path << COLOR_RESET << std::endl;
     if (stat(full_path.c_str(), &file_info) != 0)
-        throw 888;
+        throw NOT_FOUND;
 
     if (S_ISDIR(file_info.st_mode))
     {
         if (!LocationMatch.index_file.empty())
         {
-            std::string index_path = full_path + LocationMatch.index_file;
+            std::string index_path = full_path + "/" + LocationMatch.index_file;
 
             struct stat index_info;
+            std::cerr << YELLOW << index_path << COLOR_RESET << std::endl;
             if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
                 return generateResponse(RESPONSE_FILE, index_path, 200, LocationMatch);
         }

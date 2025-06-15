@@ -170,6 +170,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
     {
         std::cerr << RED << "[" << eventFd << "]" << "- - - - - ERROR: " << error << "- - - - - - - - " << COLOR_RESET << std::endl;
         client[eventFd].Response = Client::generateResponse(RESPONSE_ERROR, "./www/web/html", error, client[eventFd].LocationMatch);
+        epoll_change(this->EpoleFd, eventFd);
     }
     catch (std::exception &e)
     {
