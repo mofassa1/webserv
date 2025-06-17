@@ -152,12 +152,10 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
             std::cout << CYAN << "[" << eventFd << "]\n" << c.buffer << COLOR_RESET << std::endl;
             if (c.httpRequest.getMethod() == "GET")
                 c.Response = c.GET();
-            if(c.httpRequest.getMethod() == "POST"){
-                
-            }
-
-            // if(c.httpRequest.getMethod() == "DELETE")
-
+            if(c.httpRequest.getMethod() == "POST")
+                c.Response = c.POST();
+            if(c.httpRequest.getMethod() == "DELETE")
+                c.Response = c.DELETE();
             /////////////////////////////////
             epoll_change(this->EpoleFd, eventFd);
         }

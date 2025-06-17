@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <vector>
 #include <cctype>
 #include <map>
@@ -31,6 +32,7 @@
 #define SERVICE_UNVAILABLE 503
 #define UNKNOWN 0
 #define LENGTH_REQUIRED 411
+#define NO_CONTENT 204
 
 
 typedef struct s_start_line

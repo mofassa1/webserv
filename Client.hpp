@@ -28,7 +28,8 @@ enum ResponseType {
     RESPONSE_FILE,
     RESPONSE_ERROR,
     RESPONSE_REDIRECT,
-    RESPONSE_DIRECTORY_LISTING
+    RESPONSE_DIRECTORY_LISTING,
+    RESPONSE_DELETE
 };
 
 struct ResponseInfos {
@@ -98,12 +99,13 @@ class Client
         ResponseInfos   DELETE();
         Client();
         ~Client();
-
+        
         Client(const Client& other);
-
+        
         // Copy assignment operator
         Client& operator=(const Client& other);
-
+        
+        ResponseInfos   deleteDir(const std::string path);
         static ResponseInfos generateResponse(ResponseType type,  const std::string& path, int statusCode, S_LocationMatch& LocationMatch);
         static std::string getStatusMessage(int statusCode);
 };

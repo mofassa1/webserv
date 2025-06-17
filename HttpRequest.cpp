@@ -215,6 +215,7 @@ void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesRead
     }
 
     body.append(buffer, _Read_index_body, available);
+    upload_file.write(buffer.data() + _Read_index_body, available);
     _Read_index_body += available;
     body_received += available;
 
@@ -241,9 +242,11 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
             }
             if (!chunk_size_line.empty() && buffer[_Read_index_body - 1] == '\n')
             {
-                current_chunk_size = static_cast<size_t>(strtoul(chunk_size_line.c_str(), NULL, 16)); // rader muchkil i guess, blan dyal ss.fail()
+                char *end;
+                current_chunk_size = static_cast<size_t>(strtoul(chunk_size_line.c_str(), &end, 16));
+                if (*end != '\0')
+                    throw BAD_REQUEST;
                 chunk_size_line.clear();
-
                 if (current_chunk_size == 0)
                 {
                     chunk_done = true;
@@ -266,6 +269,7 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
             size_t to_copy = std::min(current_chunk_size, remaining_in_buffer);
 
             body.append(buffer, _Read_index_body, to_copy);
+            upload_file.write(buffer.data() + _Read_index_body, to_copy);
             _Read_index_body += to_copy;
             current_chunk_size -= to_copy;
 
