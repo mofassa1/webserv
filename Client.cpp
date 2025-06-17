@@ -6,7 +6,6 @@ Client::Client() : state(waiting), BytesReaded(0), match_found(false)
     gettimeofday(&tv, NULL);
     lastTime = (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L);
 
-
     // std::cout << "Client default constructor called" << std::endl;
 }
 
@@ -15,17 +14,18 @@ Client::~Client()
     // std::cout << "Client destructor called" << std::endl;
 }
 
-std::string getExtensionFromContentType(const std::string& contentType) {
+std::string getExtensionFromContentType(const std::string &contentType)
+{
     // Map of content types to file extensions
     std::map<std::string, std::string> contentTypeToExtension;
-    
+
     // Text types
     contentTypeToExtension["text/html"] = ".html";
     contentTypeToExtension["text/css"] = ".css";
     contentTypeToExtension["text/plain"] = ".txt";
     contentTypeToExtension["text/javascript"] = ".js";
     contentTypeToExtension["text/xml"] = ".xml";
-    
+
     // Application types
     contentTypeToExtension["application/json"] = ".json";
     contentTypeToExtension["application/javascript"] = ".js";
@@ -33,7 +33,7 @@ std::string getExtensionFromContentType(const std::string& contentType) {
     contentTypeToExtension["application/zip"] = ".zip";
     contentTypeToExtension["application/xml"] = ".xml";
     contentTypeToExtension["application/octet-stream"] = ".bin";
-    
+
     // Image types
     contentTypeToExtension["image/jpeg"] = ".jpg";
     contentTypeToExtension["image/jpg"] = ".jpg";
@@ -43,51 +43,54 @@ std::string getExtensionFromContentType(const std::string& contentType) {
     contentTypeToExtension["image/x-icon"] = ".ico";
     contentTypeToExtension["image/bmp"] = ".bmp";
     contentTypeToExtension["image/webp"] = ".webp";
-    
+
     // Video types
     contentTypeToExtension["video/mp4"] = ".mp4";
     contentTypeToExtension["video/avi"] = ".avi";
     contentTypeToExtension["video/quicktime"] = ".mov";
     contentTypeToExtension["video/x-msvideo"] = ".avi";
-    
+
     // Audio types
     contentTypeToExtension["audio/mpeg"] = ".mp3";
     contentTypeToExtension["audio/wav"] = ".wav";
     contentTypeToExtension["audio/ogg"] = ".ogg";
-    
+
     // Extract the main content type (remove charset, boundary, etc.)
     std::string mainType = contentType;
     size_t semicolonPos = contentType.find(';');
-    if (semicolonPos != std::string::npos) {
+    if (semicolonPos != std::string::npos)
+    {
         mainType = contentType.substr(0, semicolonPos);
     }
-    
+
     // Trim whitespace
     size_t start = mainType.find_first_not_of(" \t");
     size_t end = mainType.find_last_not_of(" \t");
-    if (start != std::string::npos && end != std::string::npos) {
+    if (start != std::string::npos && end != std::string::npos)
+    {
         mainType = mainType.substr(start, end - start + 1);
     }
-    
+
     // Look up the extension
     std::map<std::string, std::string>::const_iterator it = contentTypeToExtension.find(mainType);
-    if (it != contentTypeToExtension.end()) {
+    if (it != contentTypeToExtension.end())
+    {
         return it->second;
     }
-    
+
     // Default fallback
     return ".bin";
 }
 
-std::string generateUniqueString() {
+std::string generateUniqueString()
+{
     std::stringstream ss;
     std::srand(std::time(0) + rand()); // seed
     ss << std::time(0);                // timestamp
     ss << "_";
-    ss << rand() % 100000;             // random 5-digit number
-    return ss.str();                   // e.g., "1718452193_12345"
+    ss << rand() % 100000; // random 5-digit number
+    return ss.str();       // e.g., "1718452193_12345"
 }
-
 
 void Client::LocationCheck()
 {
@@ -125,15 +128,16 @@ void Client::LocationCheck()
     LocationMatch.directory = BestMatch.GetPats()["directory:"];
     LocationMatch.autoindex = BestMatch.GetAutoIndex();
     LocationMatch.index_file = BestMatch.GetPats()["index_file:"];
-    LocationMatch.cgi = BestMatch.GetCGI(); 
+    LocationMatch.cgi = BestMatch.GetCGI();
     LocationMatch.Error_pages = server->GetDefaultERRPages();
+    LocationMatch.redirect_path = BestMatch.GetPats()["redirect:"];
     if (httpRequest.getMethod() == "POST")
     {
         // GET FINAL URL
         LocationMatch.upload_directory = BestMatch.GetPats()["upload_directory:"];
         if (LocationMatch.upload_directory.empty())
             throw NOT_FOUND;
-        std::string file_extension  = getExtensionFromContentType(httpRequest.GetHeaderContent("Content-Type"));
+        std::string file_extension = getExtensionFromContentType(httpRequest.GetHeaderContent("Content-Type"));
         LocationMatch.upload_path = LocationMatch.directory + LocationMatch.path + "/" + LocationMatch.upload_directory + "/" + generateUniqueString() + file_extension;
         LocationMatch.upload_file.open(LocationMatch.upload_path.c_str(), std::ios::binary);
 
@@ -160,11 +164,11 @@ void Client::parse_request(int fd, size_t _Readed)
         /* fall through */
     case request_headers:
         httpRequest.headers();
+        LocationCheck();
         std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID HEADERS - - - - - -" << COLOR_RESET << std::endl;
         if (httpRequest.getMethod() == "POST" && httpRequest.validbody(buffer, server->Getclient_body_size_limit()))
         {
             std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID BODY - - - - - - " << COLOR_RESET << std::endl;
-            LocationCheck();
             state = request_body;
         }
         else
@@ -193,6 +197,13 @@ ResponseInfos Client::GET()
 
     if (S_ISDIR(file_info.st_mode))
     {
+        if (!LocationMatch.redirect_path.empty())
+        {
+            std::string redir_path_send;
+            if (LocationMatch.redirect_path[LocationMatch.redirect_path.length() - 1] != '/')
+                redir_path_send = LocationMatch.redirect_path + "/";
+            return generateResponse(RESPONSE_REDIRECT, redir_path_send, 301, LocationMatch);
+        }
         if (!LocationMatch.index_file.empty())
         {
             std::string index_path = full_path + "/" + LocationMatch.index_file;
@@ -213,10 +224,11 @@ ResponseInfos Client::GET()
 
         return generateResponse(RESPONSE_FILE, full_path, 200, LocationMatch);
     }
-    throw 889;
+    throw NOT_FOUND;
 }
 
-ResponseInfos    POST(){
+ResponseInfos POST()
+{
     // Implement POST handling logic here
     // For now, just return a 501 Not Implemented response
     throw NOT_IMPLEMENTED;
@@ -287,7 +299,7 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         mimeTypes[".pdf"] = "application/pdf";
         mimeTypes[".txt"] = "text/plain";
         mimeTypes[".php"] = "text/html"; // for CGI
-        mimeTypes[".py"]  = "text/html"; // for CGI
+        mimeTypes[".py"] = "text/html";  // for CGI
         std::string ext = getFileExtension(path);
         if (mimeTypes.find(ext) != mimeTypes.end())
             response.contentType = mimeTypes[ext];
@@ -305,13 +317,11 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         std::ostringstream ss;
         unsigned short statusCode = static_cast<unsigned short>(response.status);
 
-        // Check if a custom error page is defined for the status code
         if (LocationMatch.Error_pages.count(statusCode))
         {
             errorPagePath = LocationMatch.Error_pages[statusCode];
             file.open(errorPagePath.c_str(), std::ios::binary);
         }
-        // If not found or not openable, fallback to default content
         if (!file.is_open())
         {
             std::string message = Client::getStatusMessage(response.status); // like "Not Found"
@@ -333,17 +343,38 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
 
     case RESPONSE_REDIRECT:
     {
+        std::ostringstream ss;
+        ss << "HTTP/1.1 301 Moved Permanently\r\n";
+        ss << "Location: " << path << "\r\n";
+        ss << "Content-Length: 0\r\n\r\n";
+
+        response.body = ss.str();
+        response.headers["Location"] = path;
+        response.contentType = ""; // usually empty for redirects
         break;
     }
-
     case RESPONSE_DIRECTORY_LISTING:
     {
-        // Just a demo, real version should dynamically generate a listing of files
-        // response.body = "<html><body><h1>Directory Listing</h1><ul><li>file1.txt</li><li>file2.txt</li></ul></body></html>";
-        // response.contentType = "text/html";
-        // response.headers["Content-Type"] = "text/html";
-        // response.headers["Content-Length"] = std::to_string(response.body.size());
-        break;
+        DIR *dir = opendir(path.c_str());
+        if (!dir)
+            throw FORBIDDEN;
+        struct dirent *entry;
+        std::ostringstream dirContent;
+
+        dirContent << "<html><body><h1>Directory Listing for " << path << "</h1><ul>";
+        while ((entry = readdir(dir)) != NULL)
+        {
+            if (std::string(entry->d_name) == "." || std::string(entry->d_name) == "..")
+                continue;
+            dirContent << "<li><a href=\"" << entry->d_name << "\">" << entry->d_name << "</a></li>";
+        }
+        dirContent << "</ul></body></html>";
+        closedir(dir);
+
+        response.body = dirContent.str();
+        response.contentType = "text/html";
+        response.headers["Content-Type"] = response.contentType;
+        response.headers["Content-Length"] = std::to_string(response.body.size());
     }
     default:
         throw 500; // Internal server error

@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <sys/time.h>
 #include <string>
+#include <dirent.h>  
+#include <sys/types.h> 
 #include "HttpRequest.hpp"
 
 #define BUFFERSIZE 1000
