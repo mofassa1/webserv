@@ -111,7 +111,10 @@ void Client::LocationCheck()
         }
     }
     if (!match_found)
+    {
+        std::cerr << RED << "HAMOUDA 1" << COLOR_RESET << std::endl;
         throw 404;
+    }
     LocationMatch.methods = BestMatch.GetMethods();
     bool method_allowed = false;
     for (size_t i = 0; i < LocationMatch.methods.size(); ++i)
@@ -136,14 +139,20 @@ void Client::LocationCheck()
         // GET FINAL URL
         LocationMatch.upload_directory = BestMatch.GetPats()["upload_directory:"];
         if (LocationMatch.upload_directory.empty())
+        {
+            std::cerr << RED << "HAMOUDA 2"  << COLOR_RESET << std::endl;     
             throw NOT_FOUND;
+        }
         std::string file_extension = getExtensionFromContentType(httpRequest.GetHeaderContent("Content-Type"));
         LocationMatch.upload_path = LocationMatch.directory + LocationMatch.path + "/" + LocationMatch.upload_directory + "/" + generateUniqueString() + file_extension;
         LocationMatch.upload_file.open(LocationMatch.upload_path.c_str(), std::ios::binary);
 
         if (!LocationMatch.upload_file.is_open())
+        {
+            std::cerr << RED << "HAMOUDA 3" << COLOR_RESET << std::endl;
             throw NOT_FOUND;
-    }
+        }
+        }
 }
 
 void Client::parse_request(int fd, size_t _Readed)

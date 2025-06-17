@@ -175,7 +175,7 @@ bool HttpRequest::validbody(const std::string& buffer, size_t maxsize){
         content_length_str.erase(0, content_length_str.find_first_not_of(" \t\r\n"));
         content_length_str.erase(content_length_str.find_last_not_of(" \t\r\n") + 1);
         content_length = static_cast<size_t>(strtoul(content_length_str.c_str(), &end, 10));
-        if (content_length == 0 || *end != '\0')
+        if (*end != '\0') // content_length == 0 || supprimed
             throw BAD_REQUEST;
         if (content_length > maxsize)
             throw BAD_REQUEST; // Content-Length exceeds max size
