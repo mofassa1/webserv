@@ -238,7 +238,7 @@ ResponseInfos Client::deleteDir(const std::string path)
     response.body = ss.str();
     response.contentType = "text/html";
     response.headers["Content-Type"] = "text/html";
-    response.headers["Content-Length"] = std::to_string(response.body.size());
+    response.headers["Content-Length"] = to_string(response.body.size());
 
     return response;
 
@@ -281,7 +281,7 @@ ResponseInfos Client::deleteDir(const std::string path)
 //     }
 //     closedir(dir);
 //     if (rmdir(path.c_str()) == 0)
-//         return generateResponse(RESPONSE_DELETE, path, 200, LocationMatch);
+    return generateResponse(RESPONSE_DELETE, path, 200, LocationMatch);
 
 //     throw FORBIDDEN;
 }
@@ -317,7 +317,7 @@ ResponseInfos  Client::DELETE()
     }
     response.contentType = "text/html";
     response.headers["Content-Type"] = "text/html";
-    response.headers["Content-Length"] = std::to_string(response.body.size());
+    response.headers["Content-Length"] = to_string(response.body.size());
 
     return response;
 }
@@ -336,7 +336,7 @@ ResponseInfos Client::POST()
     response.body = ss.str();
     response.contentType = "text/html";
     response.headers["Content-Type"] = "text/html";
-    response.headers["Content-Length"] = std::to_string(response.body.size());
+    response.headers["Content-Length"] = to_string(response.body.size());
 
     return response;
 }
@@ -481,14 +481,14 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         response.body = dirContent.str();
         response.contentType = "text/html";
         response.headers["Content-Type"] = response.contentType;
-        response.headers["Content-Length"] = std::to_string(response.body.size());
+        response.headers["Content-Length"] = to_string(response.body.size());
         break;
     }
     case RESPONSE_DELETE:
     {
         response.contentType = "text/html";
         response.headers["Content-Type"] = response.contentType;
-        response.headers["Content-Length"] = std::to_string(response.body.size());
+        response.headers["Content-Length"] = to_string(response.body.size());
         break;
     }
     default:
