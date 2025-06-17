@@ -32,6 +32,7 @@
 #define UNKNOWN 0
 #define LENGTH_REQUIRED 411
 
+
 typedef struct s_start_line
 {
     std::string method;
@@ -62,13 +63,13 @@ public:
     void headers();
 
     void parseRequestUri(const std::string &Uri);
-    void parsebody(const std::string& buffer, size_t bytesReaded, size_t totalbytesReaded);
-    void TransferEncoding(const std::string &buffer, size_t bytesReaded);
-    void contentLength(const std::string &buffer, size_t bytesReaded);
+    void parsebody(const std::string& buffer, size_t bytesReaded, size_t totalbytesReaded, std::ofstream& upload_file);
+    void TransferEncoding(const std::string &buffer, size_t bytesReaded, std::ofstream& upload_file);
+    void contentLength(const std::string &buffer, size_t bytesReaded, std::ofstream& upload_file);
 
     void validstartline();
     bool validheader(const std::vector<std::string> &vheader);
-    bool validbody(const std::string &buffer);
+    bool validbody(const std::string &buffer, size_t maxsize);
 
     static void split_header(const std::string &buffer, std::vector<std::string> &words);
     static void split_line(const std::string &buffer, std::vector<std::string> &words);
@@ -81,6 +82,7 @@ public:
     std::string getMethod() const;
     std::string getDecodedPath() const;
     std::string getVersion() const;
+    std::string GetHeaderContent(std::string HEADER);
 
     bool hasContentLength;
     bool hasTransferEncoding;

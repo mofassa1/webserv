@@ -149,14 +149,12 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         if (c.state == done)
         {
             std::cout << GREEN << "[" << eventFd << "]" << "- - - - - - DONE - - - - - -" << COLOR_RESET << std::endl;
-            std::cout << CYAN << "[" << eventFd << "]\n"
-                      << c.buffer << COLOR_RESET << std::endl;
-            c.LocationCheck();
+            std::cout << CYAN << "[" << eventFd << "]\n" << c.buffer << COLOR_RESET << std::endl;
             if (c.httpRequest.getMethod() == "GET")
                 c.Response = c.GET();
-            // if(c.httpRequest.getMethod() == "POST"){
-
-            // }
+            if(c.httpRequest.getMethod() == "POST"){
+                
+            }
 
             // if(c.httpRequest.getMethod() == "DELETE")
 
@@ -207,7 +205,6 @@ void Multiplexer::handelResponse(Client &client, int eventfd, confugParser &conf
     fullResponse << response.body;
 
     std::string finalOutput = fullResponse.str();
-    std::cout << finalOutput.c_str();
     ssize_t bytesSent = send(fd, finalOutput.c_str(), finalOutput.size(), 0);
 
     if (bytesSent == -1)

@@ -28,6 +28,7 @@ server:
     directory: ./www/web
     methods: GET DELETE POST
     index_file: web.html
+    upload_directory: scripts
     cgi:
       .php: /usr/bin/php-cgi
       .py:  /usr/bin/python3

@@ -15,6 +15,80 @@ Client::~Client()
     // std::cout << "Client destructor called" << std::endl;
 }
 
+std::string getExtensionFromContentType(const std::string& contentType) {
+    // Map of content types to file extensions
+    std::map<std::string, std::string> contentTypeToExtension;
+    
+    // Text types
+    contentTypeToExtension["text/html"] = ".html";
+    contentTypeToExtension["text/css"] = ".css";
+    contentTypeToExtension["text/plain"] = ".txt";
+    contentTypeToExtension["text/javascript"] = ".js";
+    contentTypeToExtension["text/xml"] = ".xml";
+    
+    // Application types
+    contentTypeToExtension["application/json"] = ".json";
+    contentTypeToExtension["application/javascript"] = ".js";
+    contentTypeToExtension["application/pdf"] = ".pdf";
+    contentTypeToExtension["application/zip"] = ".zip";
+    contentTypeToExtension["application/xml"] = ".xml";
+    contentTypeToExtension["application/octet-stream"] = ".bin";
+    
+    // Image types
+    contentTypeToExtension["image/jpeg"] = ".jpg";
+    contentTypeToExtension["image/jpg"] = ".jpg";
+    contentTypeToExtension["image/png"] = ".png";
+    contentTypeToExtension["image/gif"] = ".gif";
+    contentTypeToExtension["image/svg+xml"] = ".svg";
+    contentTypeToExtension["image/x-icon"] = ".ico";
+    contentTypeToExtension["image/bmp"] = ".bmp";
+    contentTypeToExtension["image/webp"] = ".webp";
+    
+    // Video types
+    contentTypeToExtension["video/mp4"] = ".mp4";
+    contentTypeToExtension["video/avi"] = ".avi";
+    contentTypeToExtension["video/quicktime"] = ".mov";
+    contentTypeToExtension["video/x-msvideo"] = ".avi";
+    
+    // Audio types
+    contentTypeToExtension["audio/mpeg"] = ".mp3";
+    contentTypeToExtension["audio/wav"] = ".wav";
+    contentTypeToExtension["audio/ogg"] = ".ogg";
+    
+    // Extract the main content type (remove charset, boundary, etc.)
+    std::string mainType = contentType;
+    size_t semicolonPos = contentType.find(';');
+    if (semicolonPos != std::string::npos) {
+        mainType = contentType.substr(0, semicolonPos);
+    }
+    
+    // Trim whitespace
+    size_t start = mainType.find_first_not_of(" \t");
+    size_t end = mainType.find_last_not_of(" \t");
+    if (start != std::string::npos && end != std::string::npos) {
+        mainType = mainType.substr(start, end - start + 1);
+    }
+    
+    // Look up the extension
+    std::map<std::string, std::string>::const_iterator it = contentTypeToExtension.find(mainType);
+    if (it != contentTypeToExtension.end()) {
+        return it->second;
+    }
+    
+    // Default fallback
+    return ".bin";
+}
+
+std::string generateUniqueString() {
+    std::stringstream ss;
+    std::srand(std::time(0) + rand()); // seed
+    ss << std::time(0);                // timestamp
+    ss << "_";
+    ss << rand() % 100000;             // random 5-digit number
+    return ss.str();                   // e.g., "1718452193_12345"
+}
+
+
 void Client::LocationCheck()
 {
     LocationMatch.path = httpRequest.getDecodedPath();
@@ -58,8 +132,13 @@ void Client::LocationCheck()
         // GET FINAL URL
         LocationMatch.upload_directory = BestMatch.GetPats()["upload_directory:"];
         if (LocationMatch.upload_directory.empty())
-            throw 700;
-        // upload PATH
+            throw NOT_FOUND;
+        std::string file_extension  = getExtensionFromContentType(httpRequest.GetHeaderContent("Content-Type"));
+        LocationMatch.upload_path = LocationMatch.directory + LocationMatch.path + "/" + LocationMatch.upload_directory + "/" + generateUniqueString() + file_extension;
+        LocationMatch.upload_file.open(LocationMatch.upload_path.c_str(), std::ios::binary);
+
+        if (!LocationMatch.upload_file.is_open())
+            throw NOT_FOUND;
     }
 }
 
@@ -82,9 +161,10 @@ void Client::parse_request(int fd, size_t _Readed)
     case request_headers:
         httpRequest.headers();
         std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID HEADERS - - - - - -" << COLOR_RESET << std::endl;
-        if (httpRequest.getMethod() == "POST" && httpRequest.validbody(buffer))
+        if (httpRequest.getMethod() == "POST" && httpRequest.validbody(buffer, server->Getclient_body_size_limit()))
         {
             std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID BODY - - - - - - " << COLOR_RESET << std::endl;
+            LocationCheck();
             state = request_body;
         }
         else
@@ -94,7 +174,7 @@ void Client::parse_request(int fd, size_t _Readed)
         }
         /* fall through */
     case request_body:
-        httpRequest.parsebody(buffer, _Readed, BytesReaded);
+        httpRequest.parsebody(buffer, _Readed, BytesReaded, LocationMatch.upload_file);
         if (httpRequest.chunk_done == true)
             state = done;
         break;
@@ -108,7 +188,6 @@ ResponseInfos Client::GET()
     std::string full_path = LocationMatch.directory + LocationMatch.path; // Build the full file path
 
     struct stat file_info;
-    std::cerr << YELLOW <<  full_path << COLOR_RESET << std::endl;
     if (stat(full_path.c_str(), &file_info) != 0)
         throw NOT_FOUND;
 
@@ -119,23 +198,28 @@ ResponseInfos Client::GET()
             std::string index_path = full_path + "/" + LocationMatch.index_file;
 
             struct stat index_info;
-            std::cerr << YELLOW << index_path << COLOR_RESET << std::endl;
             if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
                 return generateResponse(RESPONSE_FILE, index_path, 200, LocationMatch);
         }
         if (LocationMatch.autoindex)
             return generateResponse(RESPONSE_DIRECTORY_LISTING, full_path, 200, LocationMatch);
         else
-            throw 403; // forbidden
+            throw FORBIDDEN; // forbidden
     }
     if (S_ISREG(file_info.st_mode))
     {
         if (access(full_path.c_str(), R_OK) != 0)
-            throw 403; // Forbidden
+            throw FORBIDDEN; // Forbidden
 
         return generateResponse(RESPONSE_FILE, full_path, 200, LocationMatch);
     }
     throw 889;
+}
+
+ResponseInfos    POST(){
+    // Implement POST handling logic here
+    // For now, just return a 501 Not Implemented response
+    throw NOT_IMPLEMENTED;
 }
 
 Client::Client(const Client &other)

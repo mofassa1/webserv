@@ -5,6 +5,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sstream>
+#include <fstream>
+#include <stdint.h>
+#include <ctime>
 #include <iostream>
 #include <vector>
 #include <cstring>
@@ -47,6 +51,9 @@ typedef struct S_LocationMatch {
     std::vector<std::string> methods;
     std::string index_file;
     std::string upload_directory;
+    std::string upload_path;
+    std::string redirect_path;
+    std::ofstream upload_file;
     std::map<std::string, std::string> cgi;
     std::map<unsigned short, std::string>  Error_pages;
     bool autoindex;
@@ -85,6 +92,8 @@ class Client
         void    LocationCheck();
 
         ResponseInfos    GET();
+        ResponseInfos    POST();
+        ResponseInfos   DELETE();
         Client();
         ~Client();
 

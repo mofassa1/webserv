@@ -156,10 +156,11 @@ void HttpRequest::headers()
             throw 5;
         vheaders.clear();
     }
+    print_map(mheaders);
 }
 
 
-bool HttpRequest::validbody(const std::string& buffer){
+bool HttpRequest::validbody(const std::string& buffer, size_t maxsize){
     hasContentLength = mheaders.find("Content-Length") != mheaders.end();
     hasTransferEncoding = mheaders.find("Transfer-Encoding") != mheaders.end();
     if (hasContentLength && hasTransferEncoding)
@@ -175,11 +176,13 @@ bool HttpRequest::validbody(const std::string& buffer){
         content_length_str.erase(content_length_str.find_last_not_of(" \t\r\n") + 1);
         content_length = static_cast<size_t>(strtoul(content_length_str.c_str(), &end, 10));
         if (content_length == 0 || *end != '\0')
-            throw 100;
+            throw BAD_REQUEST;
+        if (content_length > maxsize)
+            throw BAD_REQUEST; // Content-Length exceeds max size
     }
     if (hasTransferEncoding) {
         if (mheaders["Transfer-Encoding"] != "chunked\r\n")
-            throw 101; 
+            throw BAD_REQUEST; // Only chunked transfer encoding is supported
     }
     initBodyReadIndex(buffer);
     return true;
@@ -202,7 +205,7 @@ void HttpRequest::checkBodyCompletionOnEOF()
         throw 3;
 }
 
-void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesReaded)
+void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesReaded, std::ofstream& upload_file)
 {
     size_t remaining_to_read = content_length - body_received;
     size_t available = std::min(totalbytesReaded - _Read_index_body, remaining_to_read);
@@ -220,7 +223,7 @@ void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesRead
     }
 }
 
-void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesReaded)
+void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesReaded, std::ofstream& upload_file)
 {
    (void)totalbytesReaded;
     while (_Read_index_body < buffer.size() && !chunk_done)
@@ -294,15 +297,14 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
     }
 }
 
-
-void HttpRequest::parsebody(const std::string& buffer, size_t bytesReaded, size_t totalbytesReaded)
+void HttpRequest::parsebody(const std::string& buffer, size_t bytesReaded, size_t totalbytesReaded, std::ofstream& upload_file)
 {  
     if (bytesReaded == 0)
         checkBodyCompletionOnEOF();
     if (hasContentLength)
-        contentLength(buffer, totalbytesReaded);
+        contentLength(buffer, totalbytesReaded, upload_file); 
     if (hasTransferEncoding)
-        TransferEncoding(buffer, totalbytesReaded);
+        TransferEncoding(buffer, totalbytesReaded, upload_file);
 }
 
 void HttpRequest::parseRequestUri(const std::string &Uri){
@@ -361,6 +363,14 @@ std::string HttpRequest::getVersion() const
 {
     return tstart_line.version;
 }
+
+std::string HttpRequest::GetHeaderContent(std::string HEADER) {
+    std::map<std::string, std::string>::const_iterator it = mheaders.find(HEADER);
+    if (it != mheaders.end())
+        return it->second;
+    return "";
+}
+
 
 void HttpRequest::print_vector(std::vector<std::string> &vec)
 {
