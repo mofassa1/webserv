@@ -1,4 +1,5 @@
 #include "Client.hpp"
+#include <sys/wait.h>
 
 Client::Client() : state(waiting), BytesReaded(0), match_found(false)
 { // Default constructor
@@ -155,6 +156,129 @@ void Client::LocationCheck()
         }
 }
 
+std::string getFileExtension(const std::string &path)
+{
+    size_t dotPos = path.rfind('.');
+    if (dotPos != std::string::npos)
+        return path.substr(dotPos);
+    return "";
+}
+
+ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &scriptPath)
+{
+    std::cout << "GOT HEEEEERE" << std::endl;
+    // std::cout << GREEN << "Executing CGI script: " << cgiPath << COLOR_RESET << std::endl;
+    // Generate temporary file names for input and output
+    std::string outputFileName = "/tmp/cgi_output_" + generateUniqueString() + ".txt";
+    std::string inputFileName = "/tmp/cgi_input_" + generateUniqueString() + ".txt";
+
+    pid_t pid = fork();
+    if (pid == -1)
+        throw INTERNAL; // Internal Server Error
+
+    if (pid == 0)
+    {
+        // Child process
+        freopen(outputFileName.c_str(), "w+", stdout); // Redirect stdout to output file
+        freopen(inputFileName.c_str(), "r", stdin);   // Redirect stdin to input file
+
+        // Set up environment variables
+        std::map<std::string, std::string> envVars;
+        envVars["REQUEST_METHOD"] = httpRequest.getMethod();
+        std::cout<< GREEN << scriptPath << COLOR_RESET << std::endl;
+        envVars["SCRIPT_FILENAME"] = scriptPath;
+        envVars["QUERY_STRING"] = httpRequest.getDecodedPath();
+        envVars["CONTENT_LENGTH"] = std::to_string(httpRequest.content_length);
+        // envVars["CONTENT_TYPE"] = httpRequest.getHeaderContent("Content-Type");
+
+        // Convert environment variables to char* array
+        std::vector<std::string> envStrings;
+        for (const auto &pair : envVars)
+            envStrings.push_back(pair.first + "=" + pair.second);
+
+        char *envp[envStrings.size() + 1];
+        for (size_t i = 0; i < envStrings.size(); ++i)
+            envp[i] = const_cast<char *>(envStrings[i].c_str());
+        envp[envStrings.size()] = nullptr;
+
+        // Execute the CGI script
+        char *argv[] = {const_cast<char *>("/usr/bin/python3"), const_cast<char *>(scriptPath.c_str()), nullptr};
+        execve("/usr/bin/python3", argv, envp);
+
+        // If execve fails
+        perror("execve failed");
+        std::exit(1);
+    }
+    else
+    {
+        // Parent process
+        // if (httpRequest.getMethod() == "POST" && !httpRequest.body.empty())
+        // {
+        //     // Write the request body to the input file
+        //     std::ofstream inputFile(inputFileName);
+        //     if (!inputFile.is_open())
+        //         throw INTERNAL; // Internal Server Error
+        //     // inputFile << httpRequest.body;
+        //     inputFile.close();
+        // }
+
+        // Wait for the child process to finish
+        int status;
+        waitpid(pid, &status, 0);
+
+        // Read the CGI output
+        std::ifstream outputFile(outputFileName);
+        if (!outputFile.is_open())
+            throw INTERNAL; // Internal Server Error
+
+        std::ostringstream outputBuffer;
+        outputBuffer << outputFile.rdbuf();
+        outputFile.close();
+
+        // Clean up temporary files
+        // std::remove(outputFileName.c_str());
+        std::remove(inputFileName.c_str());
+
+        // Parse the CGI output
+        std::string cgiOutput = outputBuffer.str();
+        size_t headerEnd = cgiOutput.find("\r\n\r\n");
+        if (headerEnd == std::string::npos)
+            throw INTERNAL; // Internal Server Error
+
+        // Extract headers and body
+        std::string headerPart = cgiOutput.substr(0, headerEnd);
+        std::string bodyPart = cgiOutput.substr(headerEnd + 4);
+
+        // Parse headers
+        std::istringstream headerStream(headerPart);
+        std::string line;
+        std::map<std::string, std::string> headers;
+        while (std::getline(headerStream, line) && !line.empty())
+        {
+            size_t colonPos = line.find(':');
+            if (colonPos != std::string::npos)
+            {
+                std::string key = line.substr(0, colonPos);
+                std::string value = line.substr(colonPos + 1);
+                headers[key] = value;
+            }
+        }
+
+        // Create the response
+        ResponseInfos response;
+        response.status = 200; // Default to 200 OK
+        if (headers.find("Status") != headers.end())
+        {
+            response.status = std::stoi(headers["Status"]);
+        }
+        response.body = bodyPart;
+        response.headers = headers;
+        response.contentType = headers["Content-Type"];
+
+        return response;
+    }
+}
+
 void Client::parse_request(int fd, size_t _Readed)
 {
     switch (state)
@@ -196,9 +320,57 @@ void Client::parse_request(int fd, size_t _Readed)
     }
 }
 
+// ResponseInfos Client::GET()
+// {
+//     std::string full_path = LocationMatch.directory + LocationMatch.path; // Build the full file path
+
+//     struct stat file_info;
+//     if (stat(full_path.c_str(), &file_info) != 0)
+//         throw NOT_FOUND;
+
+//     if (S_ISDIR(file_info.st_mode))
+//     {
+//         if (!LocationMatch.redirect_path.empty())
+//         {
+//             std::string redir_path_send;
+//             if (LocationMatch.redirect_path[LocationMatch.redirect_path.length() - 1] != '/')
+//                 redir_path_send = LocationMatch.redirect_path + "/";
+//             return generateResponse(RESPONSE_REDIRECT, redir_path_send, 301, LocationMatch);
+//         }
+//         if (!LocationMatch.index_file.empty())
+//         {
+//             std::string index_path = full_path + "/" + LocationMatch.index_file;
+
+//             struct stat index_info;
+//             if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
+//                 return generateResponse(RESPONSE_FILE, index_path, 200, LocationMatch);
+//         }
+//         if (LocationMatch.autoindex)
+//             return generateResponse(RESPONSE_DIRECTORY_LISTING, full_path, 200, LocationMatch);
+//         else
+//             throw FORBIDDEN; // forbidden
+//     }
+//     if (S_ISREG(file_info.st_mode))
+//     {
+//         if (access(full_path.c_str(), R_OK) != 0)
+//             throw FORBIDDEN; // Forbidden
+
+//         return generateResponse(RESPONSE_FILE, full_path, 200, LocationMatch);
+//     }
+//     throw NOT_FOUND;
+// }
+
+std::string toLower(const std::string &str)
+{
+    std::string result = str;
+    std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+    return result;
+}
+
 ResponseInfos Client::GET()
 {
     std::string full_path = LocationMatch.directory + LocationMatch.path; // Build the full file path
+    std::cout<< GREEN << full_path << COLOR_RESET << std::endl;
 
     struct stat file_info;
     if (stat(full_path.c_str(), &file_info) != 0)
@@ -206,13 +378,6 @@ ResponseInfos Client::GET()
 
     if (S_ISDIR(file_info.st_mode))
     {
-        if (!LocationMatch.redirect_path.empty())
-        {
-            std::string redir_path_send;
-            if (LocationMatch.redirect_path[LocationMatch.redirect_path.length() - 1] != '/')
-                redir_path_send = LocationMatch.redirect_path + "/";
-            return generateResponse(RESPONSE_REDIRECT, redir_path_send, 301, LocationMatch);
-        }
         if (!LocationMatch.index_file.empty())
         {
             std::string index_path = full_path + "/" + LocationMatch.index_file;
@@ -228,6 +393,26 @@ ResponseInfos Client::GET()
     }
     if (S_ISREG(file_info.st_mode))
     {
+        std::cout << GREEN << "File is regular: " << full_path << COLOR_RESET << std::endl;
+        std::string file_extension = getFileExtension(full_path);
+        std::cout << GREEN << "File extension: " << file_extension << COLOR_RESET << std::endl;
+        
+        // Helper function to convert a string to lowercase
+
+        
+        // Normalize file_extension and keys in LocationMatch.cgi
+        std::string normalizedExtension = toLower(file_extension);
+
+        std::cout << GREEN << "Normalized extension: " << normalizedExtension << COLOR_RESET << std::endl;
+        std::cout << GREEN << "CGI extensions: " << LocationMatch.cgi[file_extension]<<std::endl;
+        if (LocationMatch.cgi.find(normalizedExtension) != LocationMatch.cgi.end())
+        {
+            std::string cgi_path = LocationMatch.cgi[normalizedExtension];
+            // std::cout << RED << cgi_path << COLOR_RESET << std::endl;
+        
+            return executeCGI(cgi_path, full_path);
+        }
+
         if (access(full_path.c_str(), R_OK) != 0)
             throw FORBIDDEN; // Forbidden
 
@@ -374,13 +559,6 @@ Client &Client::operator=(const Client &other)
     return *this;
 }
 
-std::string getFileExtension(const std::string &path)
-{
-    size_t dotPos = path.rfind('.');
-    if (dotPos != std::string::npos)
-        return path.substr(dotPos);
-    return "";
-}
 
 ResponseInfos Client::generateResponse(ResponseType type, const std::string &path, int statusCode, S_LocationMatch &LocationMatch)
 {

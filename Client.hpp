@@ -91,6 +91,8 @@ class Client
         S_LocationMatch LocationMatch;
         ResponseInfos Response;
 
+        ResponseInfos executeCGI(const std::string &cgiPath, const std::string &scriptPath);
+
         void    parse_request(int fd, size_t bytesReaded);
         void    LocationCheck();
 
