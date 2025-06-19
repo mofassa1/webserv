@@ -149,7 +149,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         if (c.state == done)
         {
             std::cout << GREEN << "[" << eventFd << "]" << "- - - - - - DONE - - - - - -" << COLOR_RESET << std::endl;
-            std::cout << CYAN << "[" << eventFd << "]\n" << c.buffer << COLOR_RESET << "------------------------------------------------" << std::endl;
+            std::cout << CYAN << "[" << eventFd << "]\n" << c.buffer << COLOR_RESET << "$------------------------------------------------" << std::endl;
             if (c.httpRequest.getMethod() == "GET")
                 c.Response = c.GET();
             if(c.httpRequest.getMethod() == "POST")
@@ -159,13 +159,13 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
             /////////////////////////////////
             epoll_change(this->EpoleFd, eventFd);
         }
-        else
-            std::cout << YELLOW << "[" << eventFd << "]" << "- - - - - - STILL ON PARSING - - - - - - -" << COLOR_RESET << std::endl;
+        // else
+        //     std::cout << YELLOW << "[" << eventFd << "]" << "- - - - - - STILL ON PARSING - - - - - - -" << COLOR_RESET << std::endl;
     }
     catch (int error)
     {
         std::cerr << RED << "[" << eventFd << "]" << "- - - - - ERROR: " << error << "- - - - - - - - " << COLOR_RESET << std::endl;
-        client[eventFd].Response = Client::generateResponse(RESPONSE_ERROR, "./www/web/html", error, client[eventFd].LocationMatch);
+        client[eventFd].Response = Client::generateResponse(RESPONSE_ERROR, "", error, client[eventFd].LocationMatch);
         epoll_change(this->EpoleFd, eventFd);
     }
     catch (std::exception &e)
@@ -250,25 +250,17 @@ void Multiplexer::run(confugParser &config)
                 Client &curClient = it->second;
                 double currenTime = get_time_ms();
 
-                if (currenTime - curClient.lastTime > TIMEOUT)
+                if (get_time_ms() - client[fd].lastTime > TIMEOUT_MS) // ????????????????????????
                 {
-                    const char *timeoutResponse =
-                        "HTTP/1.1 408 Request Timeout\r\n"
-                        "Content-Type: text/html\r\n"
-                        "Content-Length: 98\r\n"
-                        "Connection: close\r\n"
-                        "\r\n"
-                        "<html><body><h1>408 Request Timeout</h1><p>Your request took too long. Please try again.</p></body></html>";
-
-                    send(fd, timeoutResponse, strlen(timeoutResponse), 0);
-                    close(fd);
-
+                    client[fd].Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT, client[fd].LocationMatch);
+                    handelResponse(client[fd], fd, config);
+                    // close(fd);
                     // Remove client from map and list
-                    config.removeClient(fd);
-                    clientOfServer.erase(fd);
+                    // config.removeClient(fd);
+                    // clientOfServer.erase(fd);
 
-                    client.erase(it);
-                    allClients.erase(allClients.begin() + i);
+                    // client.erase(it);
+                    // allClients.erase(allClients.begin() + i);
                     epoll_ctl(EpoleFd, EPOLL_CTL_DEL, fd, NULL);
                     continue; // Don't increment i, list shifted left
                 }

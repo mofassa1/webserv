@@ -205,24 +205,24 @@ void HttpRequest::checkBodyCompletionOnEOF()
         throw 3;
 }
 
-void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesReaded, std::ofstream& upload_file)
+void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesReaded, std::ofstream& upload_file, size_t EndofFile)
 {
-    size_t remaining_to_read = content_length - body_received;
-    size_t available = std::min(totalbytesReaded - _Read_index_body, remaining_to_read);
+    size_t remaining = content_length - body_received;
+    size_t available = totalbytesReaded - _Read_index_body;
+    size_t to_read = std::min(remaining, available);
 
-    if (body_received + available > content_length) {
-        throw 4;
+    for (size_t i = 0; i < to_read; ++i) {
+        char ch = buffer[_Read_index_body];
+        body += ch;
+        upload_file.write(&ch, sizeof(ch));
+        _Read_index_body++;
+        body_received++;
     }
 
-    body.append(buffer, _Read_index_body, available);
-    upload_file.write(buffer.data() + _Read_index_body, available);
-    _Read_index_body += available;
-    body_received += available;
-
-    if (body_received == content_length) { // rader muchkil 
-        chunk_done = true; 
-    }
+    if (body_received == content_length)
+        chunk_done = true;
 }
+
 
 void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesReaded, std::ofstream& upload_file)
 {
@@ -303,10 +303,8 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
 
 void HttpRequest::parsebody(const std::string& buffer, size_t bytesReaded, size_t totalbytesReaded, std::ofstream& upload_file)
 {  
-    if (bytesReaded == 0)
-        checkBodyCompletionOnEOF();
     if (hasContentLength)
-        contentLength(buffer, totalbytesReaded, upload_file); 
+        contentLength(buffer, totalbytesReaded, upload_file, bytesReaded); 
     if (hasTransferEncoding)
         TransferEncoding(buffer, totalbytesReaded, upload_file);
 }

@@ -1,0 +1,67 @@
+# processeur_ia.py
+# -*- coding: utf-8 -*-
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+
+class ProcesseurIA:
+    def __init__(self):
+        self.normaliseur = StandardScaler()
+        self.kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+        self.knn = KNeighborsClassifier(n_neighbors=5, weights='distance')
+        self.centres_clusters = None
+
+    def trouver_k_optimal(self, X, max_k=10):
+        X_normalise = self.normaliseur.fit_transform(X)
+        distorsions = []
+        for k in range(1, max_k + 1):
+            kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+            kmeans.fit(X_normalise)
+            distorsions.append(kmeans.inertia_)
+        plt.plot(range(1, max_k + 1), distorsions, 'b-o', label='Distorsion')
+        plt.xlabel('Nombre de Clusters (k)')
+        plt.ylabel('Inertie')
+        plt.title('Méthode du Coude pour k Optimal')
+        plt.legend()
+        plt.show()
+        return distorsions.index(min(distorsions[1:])) + 2
+
+    def coder_hamming_4_7(self, bits_donnees):
+        if len(bits_donnees) != 4:
+            raise ValueError("Hamming (4,7) nécessite 4 bits de données.")
+        code_hamming = [0] * 7
+        code_hamming[2] = bits_donnees[0]
+        code_hamming[4] = bits_donnees[1]
+        code_hamming[5] = bits_donnees[2]
+        code_hamming[6] = bits_donnees[3]
+        code_hamming[0] = code_hamming[2] ^ code_hamming[4] ^ code_hamming[6]
+        code_hamming[1] = code_hamming[2] ^ code_hamming[5] ^ code_hamming[6]
+        code_hamming[3] = code_hamming[4] ^ code_hamming[5] ^ code_hamming[6]
+        return code_hamming
+
+    def decoder_hamming_4_7(self, code_recu):
+        if len(code_recu) != 7:
+            raise ValueError("Hamming (4,7) nécessite 7 bits.")
+        p1_verif = code_recu[0] ^ code_recu[2] ^ code_recu[4] ^ code_recu[6]
+        p2_verif = code_recu[1] ^ code_recu[2] ^ code_recu[5] ^ code_recu[6]
+        p3_verif = code_recu[3] ^ code_recu[4] ^ code_recu[5] ^ code_recu[6]
+        position_erreur = (p3_verif << 2) | (p2_verif << 1) | p1_verif
+        if position_erreur != 0:
+            code_recu[position_erreur - 1] ^= 1
+        bits_donnees = [code_recu[2], code_recu[4], code_recu[5], code_recu[6]]
+        return bits_donnees, "Erreur corrigée" if position_erreur != 0 else "Pas d'erreur"
+
+    def entrainer_modeles(self, X, y):
+        X_normalise = self.normaliseur.fit_transform(X)
+        k_optimal = self.trouver_k_optimal(X)
+        self.kmeans = KMeans(n_clusters=k_optimal, random_state=42, n_init=10)
+        self.kmeans.fit(X_normalise)
+        self.centres_clusters = self.kmeans.cluster_centers_
+        self.knn.fit(X_normalise, y)
+
+    def predire(self, caracteristiques):
+        X_normalise = self.normaliseur.transform([caracteristiques])
+        cluster = self.kmeans.predict(X_normalise)[0]
+        probabilite_erreur = self.knn.predict_proba(X_normalise)[0][1]
+        return cluster, probabilite_erreur, self.centres_clusters[cluster]

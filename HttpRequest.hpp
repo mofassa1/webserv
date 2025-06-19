@@ -67,7 +67,7 @@ public:
     void parseRequestUri(const std::string &Uri);
     void parsebody(const std::string& buffer, size_t bytesReaded, size_t totalbytesReaded, std::ofstream& upload_file);
     void TransferEncoding(const std::string &buffer, size_t bytesReaded, std::ofstream& upload_file);
-    void contentLength(const std::string &buffer, size_t bytesReaded, std::ofstream& upload_file);
+    void contentLength(const std::string &buffer, size_t bytesReaded, std::ofstream& upload_file, size_t EndofFile);
 
     void validstartline();
     bool validheader(const std::vector<std::string> &vheader);

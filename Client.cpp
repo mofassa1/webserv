@@ -112,10 +112,7 @@ void Client::LocationCheck()
         }
     }
     if (!match_found)
-    {
-        std::cerr << RED << "HAMOUDA 1" << COLOR_RESET << std::endl;
-        throw 404;
-    }
+        throw NOT_FOUND;
     LocationMatch.methods = BestMatch.GetMethods();
     bool method_allowed = false;
     for (size_t i = 0; i < LocationMatch.methods.size(); ++i)
@@ -126,9 +123,8 @@ void Client::LocationCheck()
             break;
         }
     }
-
     if (!method_allowed)
-        throw 405;
+        throw NOT_ALLOWED;
     LocationMatch.directory = BestMatch.GetPats()["directory:"];
     LocationMatch.autoindex = BestMatch.GetAutoIndex();
     LocationMatch.index_file = BestMatch.GetPats()["index_file:"];
@@ -140,20 +136,20 @@ void Client::LocationCheck()
         // GET FINAL URL
         LocationMatch.upload_directory = BestMatch.GetPats()["upload_directory:"];
         if (LocationMatch.upload_directory.empty())
-        {
-            std::cerr << RED << "HAMOUDA 2"  << COLOR_RESET << std::endl;     
             throw NOT_FOUND;
-        }
-        std::string file_extension = getExtensionFromContentType(httpRequest.GetHeaderContent("Content-Type"));
+        std::string content_typee = httpRequest.GetHeaderContent("Content-Type");
+        if(content_typee.empty())
+            throw BAD_REQUEST;
+        content_typee.erase(0, content_typee.find_first_not_of(" \t\r\n"));
+        content_typee.erase(content_typee.find_last_not_of(" \t\r\n") + 1);
+        std::string file_extension = getExtensionFromContentType(content_typee);
         LocationMatch.upload_path = LocationMatch.directory + LocationMatch.path + "/" + LocationMatch.upload_directory + "/" + generateUniqueString() + file_extension;
-        LocationMatch.upload_file.open(LocationMatch.upload_path.c_str(), std::ios::binary);
+        std::cout << "upload_path: " << LocationMatch.upload_path << std::endl;
+        LocationMatch.upload_file.open(LocationMatch.upload_path.c_str(), std::ios::out | std::ios::binary);
 
         if (!LocationMatch.upload_file.is_open())
-        {
-            std::cerr << RED << "HAMOUDA 3" << COLOR_RESET << std::endl;
             throw NOT_FOUND;
-        }
-        }
+    }
 }
 
 std::string getFileExtension(const std::string &path)
@@ -320,57 +316,9 @@ void Client::parse_request(int fd, size_t _Readed)
     }
 }
 
-// ResponseInfos Client::GET()
-// {
-//     std::string full_path = LocationMatch.directory + LocationMatch.path; // Build the full file path
-
-//     struct stat file_info;
-//     if (stat(full_path.c_str(), &file_info) != 0)
-//         throw NOT_FOUND;
-
-//     if (S_ISDIR(file_info.st_mode))
-//     {
-//         if (!LocationMatch.redirect_path.empty())
-//         {
-//             std::string redir_path_send;
-//             if (LocationMatch.redirect_path[LocationMatch.redirect_path.length() - 1] != '/')
-//                 redir_path_send = LocationMatch.redirect_path + "/";
-//             return generateResponse(RESPONSE_REDIRECT, redir_path_send, 301, LocationMatch);
-//         }
-//         if (!LocationMatch.index_file.empty())
-//         {
-//             std::string index_path = full_path + "/" + LocationMatch.index_file;
-
-//             struct stat index_info;
-//             if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
-//                 return generateResponse(RESPONSE_FILE, index_path, 200, LocationMatch);
-//         }
-//         if (LocationMatch.autoindex)
-//             return generateResponse(RESPONSE_DIRECTORY_LISTING, full_path, 200, LocationMatch);
-//         else
-//             throw FORBIDDEN; // forbidden
-//     }
-//     if (S_ISREG(file_info.st_mode))
-//     {
-//         if (access(full_path.c_str(), R_OK) != 0)
-//             throw FORBIDDEN; // Forbidden
-
-//         return generateResponse(RESPONSE_FILE, full_path, 200, LocationMatch);
-//     }
-//     throw NOT_FOUND;
-// }
-
-std::string toLower(const std::string &str)
-{
-    std::string result = str;
-    std::transform(result.begin(), result.end(), result.begin(), ::tolower);
-    return result;
-}
-
 ResponseInfos Client::GET()
 {
     std::string full_path = LocationMatch.directory + LocationMatch.path; // Build the full file path
-    std::cout<< GREEN << full_path << COLOR_RESET << std::endl;
 
     struct stat file_info;
     if (stat(full_path.c_str(), &file_info) != 0)
@@ -378,6 +326,13 @@ ResponseInfos Client::GET()
 
     if (S_ISDIR(file_info.st_mode))
     {
+        if (!LocationMatch.redirect_path.empty())
+        {
+            std::string redir_path_send;
+            if (LocationMatch.redirect_path[LocationMatch.redirect_path.length() - 1] != '/')
+                redir_path_send = LocationMatch.redirect_path + "/";
+            return generateResponse(RESPONSE_REDIRECT, redir_path_send, 301, LocationMatch);
+        }
         if (!LocationMatch.index_file.empty())
         {
             std::string index_path = full_path + "/" + LocationMatch.index_file;
@@ -393,26 +348,6 @@ ResponseInfos Client::GET()
     }
     if (S_ISREG(file_info.st_mode))
     {
-        std::cout << GREEN << "File is regular: " << full_path << COLOR_RESET << std::endl;
-        std::string file_extension = getFileExtension(full_path);
-        std::cout << GREEN << "File extension: " << file_extension << COLOR_RESET << std::endl;
-        
-        // Helper function to convert a string to lowercase
-
-        
-        // Normalize file_extension and keys in LocationMatch.cgi
-        std::string normalizedExtension = toLower(file_extension);
-
-        std::cout << GREEN << "Normalized extension: " << normalizedExtension << COLOR_RESET << std::endl;
-        std::cout << GREEN << "CGI extensions: " << LocationMatch.cgi[file_extension]<<std::endl;
-        if (LocationMatch.cgi.find(normalizedExtension) != LocationMatch.cgi.end())
-        {
-            std::string cgi_path = LocationMatch.cgi[normalizedExtension];
-            // std::cout << RED << cgi_path << COLOR_RESET << std::endl;
-        
-            return executeCGI(cgi_path, full_path);
-        }
-
         if (access(full_path.c_str(), R_OK) != 0)
             throw FORBIDDEN; // Forbidden
 
@@ -420,6 +355,61 @@ ResponseInfos Client::GET()
     }
     throw NOT_FOUND;
 }
+
+std::string toLower(const std::string &str)
+{
+    std::string result = str;
+    std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+    return result;
+}
+
+// ResponseInfos Client::GET()
+// {
+//     std::string full_path = LocationMatch.directory + LocationMatch.path; // Build the full file path
+//     std::cout<< GREEN << full_path << COLOR_RESET << std::endl;
+
+//     struct stat file_info;
+//     if (stat(full_path.c_str(), &file_info) != 0)
+//         throw NOT_FOUND;
+
+//     if (S_ISDIR(file_info.st_mode))
+//     {
+//         if (!LocationMatch.index_file.empty())
+//         {
+//             std::string index_path = full_path + "/" + LocationMatch.index_file;
+
+//             struct stat index_info;
+//             if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
+//                 return generateResponse(RESPONSE_FILE, index_path, 200, LocationMatch);
+//         }
+//         if (LocationMatch.autoindex)
+//             return generateResponse(RESPONSE_DIRECTORY_LISTING, full_path, 200, LocationMatch);
+//         else
+//             throw FORBIDDEN; // forbidden
+//     }
+//     if (S_ISREG(file_info.st_mode))
+//     {
+//         std::cout << GREEN << "File is regular: " << full_path << COLOR_RESET << std::endl;
+//         std::string file_extension = getFileExtension(full_path);
+//         std::cout << GREEN << "File extension: " << file_extension << COLOR_RESET << std::endl;
+//         // Helper function to convert a string to lowercase
+//         // Normalize file_extension and keys in LocationMatch.cgi
+//         std::string normalizedExtension = toLower(file_extension);
+
+//         std::cout << GREEN << "Normalized extension: " << normalizedExtension << COLOR_RESET << std::endl;
+//         std::cout << GREEN << "CGI extensions: " << LocationMatch.cgi[file_extension]<<std::endl;
+//         if (LocationMatch.cgi.find(normalizedExtension) != LocationMatch.cgi.end())
+//         {
+//             std::string cgi_path = LocationMatch.cgi[normalizedExtension];
+//             // std::cout << RED << cgi_path << COLOR_RESET << std::endl;
+//             return executeCGI(cgi_path, full_path);
+//         }
+//         if (access(full_path.c_str(), R_OK) != 0)
+//             throw FORBIDDEN; // Forbidden
+//         return generateResponse(RESPONSE_FILE, full_path, 200, LocationMatch);
+//     }
+//     throw NOT_FOUND;
+// }
 
 ResponseInfos Client::deleteDir(const std::string path)
 {
