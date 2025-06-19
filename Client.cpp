@@ -199,8 +199,8 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
         envp[envStrings.size()] = nullptr;
 
         // Execute the CGI script
-        char *argv[] = {const_cast<char *>("/usr/bin/python3"), const_cast<char *>(scriptPath.c_str()), nullptr};
-        execve("/usr/bin/python3", argv, envp);
+        char *argv[] = {const_cast<char *>(cgiPath.c_str()), const_cast<char *>(scriptPath.c_str()), nullptr};
+        execve(cgiPath.c_str(), argv, envp);
 
         // If execve fails
         perror("execve failed");
@@ -364,6 +364,11 @@ std::string toLower(const std::string &str)
     return result;
 }
 
+bool isCGI(const std::string &fileExtension, const std::map<std::string, std::string> &cgiMap)
+{
+
+    return cgiMap.find(fileExtension) != cgiMap.end();
+}
 ResponseInfos Client::GET()
 {
     std::string full_path = LocationMatch.directory + LocationMatch.path; // Build the full file path
@@ -393,8 +398,9 @@ ResponseInfos Client::GET()
         // IF CGI
         std::string file_extension = getFileExtension(full_path);
         file_extension += ':';
+        if (isCGI(file_extension, LocationMatch.cgi)){
         std::string path_cgi = LocationMatch.cgi[file_extension];
-            return executeCGI(path_cgi, full_path);
+            return executeCGI(path_cgi, full_path);}
         ////////////
         
         if (access(full_path.c_str(), R_OK) != 0)
