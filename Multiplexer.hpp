@@ -17,7 +17,7 @@
 
 #define BUFFERSIZE 1000
 
-#define TIMEOUT_MS 3000
+#define TIMEOUT_MS 10000
 
 class Multiplexer
 {
