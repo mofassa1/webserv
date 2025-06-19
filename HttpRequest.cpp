@@ -137,7 +137,8 @@ void HttpRequest::print_map(const std::map<std::string, std::string> &m)
     std::cout << YELLOW;
     for (std::map<std::string, std::string>::const_iterator it = m.begin(); it != m.end(); ++it)
     {
-        std::cout << it->first << " => " << it->second;
+        std::cout << it->first << " => " << it->second << std::endl;
+        
     }
     std::cout << COLOR_RESET;
 }
