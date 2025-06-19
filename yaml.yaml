@@ -35,6 +35,7 @@ server:
       .test: /hello
   route:
     path: /scripts
+    auto_index: ON
     directory: ./www/scripts
     methods: GET POST DELETE
     index_file: script.py

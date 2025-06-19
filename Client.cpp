@@ -140,9 +140,14 @@ void Client::LocationCheck()
             throw NOT_FOUND;
         std::string content_typee = httpRequest.GetHeaderContent("Content-Type");
         if(content_typee.empty())
-            throw BAD_REQUEST;
-        content_typee.erase(0, content_typee.find_first_not_of(" \t\r\n"));
-        content_typee.erase(content_typee.find_last_not_of(" \t\r\n") + 1);
+        {
+            content_typee = "application/octet-stream";
+        }
+        else
+        {
+            content_typee.erase(0, content_typee.find_first_not_of(" \t\r\n"));
+            content_typee.erase(content_typee.find_last_not_of(" \t\r\n") + 1);
+        }
         std::string file_extension = getExtensionFromContentType(content_typee);
         LocationMatch.upload_path = LocationMatch.directory + LocationMatch.path + "/" + LocationMatch.upload_directory + "/" + generateUniqueString() + file_extension;
         std::cout << "upload_path: " << LocationMatch.upload_path << std::endl;
@@ -378,10 +383,13 @@ ResponseInfos Client::GET()
     if (stat(full_path.c_str(), &file_info) != 0)
         throw NOT_FOUND;
 
+    std::cerr << RED << "HERE HERE" << COLOR_RESET << std::endl;
     if (S_ISDIR(file_info.st_mode))
     {
+        std::cerr << RED << "HERE 1" << COLOR_RESET << std::endl;
         if (!LocationMatch.index_file.empty())
         {
+            std::cerr << RED << "HERE" << COLOR_RESET << std::endl;
             std::string index_path = full_path + "/" + LocationMatch.index_file;
 
             struct stat index_info;
@@ -400,7 +408,8 @@ ResponseInfos Client::GET()
         file_extension += ':';
         if (isCGI(file_extension, LocationMatch.cgi)){
         std::string path_cgi = LocationMatch.cgi[file_extension];
-            return executeCGI(path_cgi, full_path);}
+            return executeCGI(path_cgi, full_path);
+        }
         ////////////
         
         if (access(full_path.c_str(), R_OK) != 0)
@@ -649,7 +658,7 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         {
             if (std::string(entry->d_name) == "." || std::string(entry->d_name) == "..")
                 continue;
-            dirContent << "<li><a href=\"" << entry->d_name << "\">" << entry->d_name << "</a></li>";
+            dirContent << "<li><a href=\"" << LocationMatch.path + "/" + entry->d_name << "\">" << entry->d_name << "</a></li>";
         }
         dirContent << "</ul></body></html>";
         closedir(dir);

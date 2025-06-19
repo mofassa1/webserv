@@ -165,7 +165,7 @@ bool HttpRequest::validbody(const std::string& buffer, size_t maxsize){
     hasContentLength = mheaders.find("Content-Length") != mheaders.end();
     hasTransferEncoding = mheaders.find("Transfer-Encoding") != mheaders.end();
     if (hasContentLength && hasTransferEncoding)
-        throw 1;
+        throw BAD_REQUEST;
 
     if (!hasContentLength && !hasTransferEncoding) 
         throw LENGTH_REQUIRED;
