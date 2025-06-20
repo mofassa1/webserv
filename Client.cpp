@@ -556,7 +556,6 @@ Client::Client(const Client &other)
     lastTime = other.lastTime;
     state = other.state;
     httpRequest = other.httpRequest;
-    server = other.server; // Shallow copy
     buffer = other.buffer;
     BytesReaded = other.BytesReaded;
 }
@@ -568,7 +567,6 @@ Client &Client::operator=(const Client &other)
         lastTime = other.lastTime;
         state = other.state;
         httpRequest = other.httpRequest;
-        server = other.server; // Shallow copy
         buffer = other.buffer;
         BytesReaded = other.BytesReaded;
     }
