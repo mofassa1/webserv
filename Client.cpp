@@ -15,6 +15,14 @@ Client::~Client()
     // std::cout << "Client destructor called" << std::endl;
 }
         
+std::string HOST_AND_PORT(std::string HOST, int PORT){
+    std::ostringstream oss;
+    oss << PORT;  
+    std::string str = oss.str();
+    std::string host_and_port = HOST + ":" + str;
+
+    return host_and_port;
+}
 
 void    Client::check_HOST(){
     std::string host_value = httpRequest.GetHost();
@@ -28,14 +36,21 @@ void    Client::check_HOST(){
             check = true;
             break;
         }
-        // HOST + PORT 
-
+        if(HOST_AND_PORT(servers[i]->GetHost(), LocationMatch.PORT) == host_value){
+            server_matched = servers[i];
+            check = true;
+            break;
+        }
         if(servers[i]->GetServerName() == host_value){
             server_matched = servers[i];
             check = true;
             break;
         }
-        // server name + PORT
+        if(HOST_AND_PORT(servers[i]->GetServerName(), LocationMatch.PORT) == host_value){
+            server_matched = servers[i];
+            check = true;
+            break;
+        }
     }
     if(!check)
         server_matched = servers[0];

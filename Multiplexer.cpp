@@ -147,6 +147,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         c.buffer += buffer;
         c.BytesReaded += bytesReaded;
         c.servers = clientOfServer[eventFd];
+        c.LocationMatch.PORT = soketOfPort[eventFd];
         c.parse_request(eventFd, bytesReaded);
         if (c.state == done)
         {

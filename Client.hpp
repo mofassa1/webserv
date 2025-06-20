@@ -52,7 +52,7 @@ typedef struct S_LocationMatch {
     std::string path;
     std::string directory;
     std::string HOST;
-    std::string PORT;
+    int         PORT;
     std::vector<std::string> methods;
     std::string index_file;
     std::string upload_directory;
