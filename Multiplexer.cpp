@@ -76,11 +76,13 @@ void Multiplexer::startMultiplexing(confugParser &config)
         for (size_t j = 0; j < portsCount; j++)
         {
             int socketFd = this->create_server_socket(Ports[j], host);
+            
             if (socketFd < 0)
             {
                 config.GetAllData()[i]->SetServerSocket(socketFd * -1);
                 continue;
             }
+            soketOfPort[socketFd] = (Ports[j]);
             struct epoll_event event;
 
             event.events = EPOLLIN;
@@ -286,6 +288,7 @@ void Multiplexer::run(confugParser &config)
             if (isServerSocket(eventFd))
             {
                 int clientSocket = NewClient(eventFd);
+                soketOfPort[clientSocket] = soketOfPort[eventFd];
                 if (clientSocket != -1)
                 {
                     config.newClient(clientSocket, eventFd);
@@ -294,7 +297,9 @@ void Multiplexer::run(confugParser &config)
                     for (size_t i = 0; i < count; i++)
                     {
                         if (config.GetAllData()[i]->isTheSeverSocket(eventFd))
+                        {
                             clientOfServer[clientSocket].push_back(config.GetAllData()[i]);
+                        }
                     }
                 }
             }
