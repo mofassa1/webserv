@@ -120,14 +120,16 @@ void HttpRequest::split_header(const std::string &buffer, std::vector<std::strin
     if (pos == std::string::npos || pos == 0)
     {
         words.clear();
-        throw 1;
+        throw BAD_REQUEST;
     }
     std::string header_name = buffer.substr(0, pos);
     if (header_name.find(" ") != std::string::npos)
-        throw 2;
+        throw BAD_REQUEST;
     std::string header_value = buffer.substr(pos + 1);
     if (!header_value.empty() && header_value[0] == ' ')
         header_value.erase(0, 1);
+    header_value.erase(0, header_value.find_first_not_of(" \t\r\n"));
+    header_value.erase(header_value.find_last_not_of(" \t\r\n") + 1);    
     words.clear();
     words.push_back(header_name);
     words.push_back(header_value);
@@ -138,7 +140,7 @@ void HttpRequest::print_map(const std::map<std::string, std::string> &m)
     std::cout << YELLOW;
     for (std::map<std::string, std::string>::const_iterator it = m.begin(); it != m.end(); ++it)
     {
-        std::cout << it->first << " => " << it->second << std::endl;
+        std::cout << it->first << "$=>$" << it->second << "$" << std::endl;
     }
     std::cout << COLOR_RESET;
 }
