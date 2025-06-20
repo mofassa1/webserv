@@ -85,6 +85,7 @@ public:
     std::string getDecodedPath() const;
     std::string getVersion() const;
     std::string GetHeaderContent(std::string HEADER);
+    std::string GetHost();
 
     bool hasContentLength;
     bool hasTransferEncoding;
@@ -109,4 +110,5 @@ bool isBadUriTraversal(const std::string &uri);
 bool isBadUri(const std::string &uri);
 char hexToChar(char high, char low);
 bool isHexDigit(char c);
+std::string to_lowercase(const std::string& input);
 

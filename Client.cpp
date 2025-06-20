@@ -14,20 +14,44 @@ Client::~Client()
 {
     // std::cout << "Client destructor called" << std::endl;
 }
+        
+
+void    Client::check_HOST(){
+    std::string host_value = httpRequest.GetHost();
+    if(host_value.empty())
+        throw BAD_REQUEST;
+    bool check = false;
+
+    for(int i = 0; i < servers.size(); i++){
+        if(servers[i]->GetHost() == host_value){
+            server_matched = servers[i];
+            check = true;
+            break;
+        }
+        // HOST + PORT 
+
+        if(servers[i]->GetServerName() == host_value){
+            server_matched = servers[i];
+            check = true;
+            break;
+        }
+        // server name + PORT
+    }
+    if(!check)
+        server_matched = servers[0];
+}
+
 
 std::string getExtensionFromContentType(const std::string &contentType)
 {
-    // Map of content types to file extensions
     std::map<std::string, std::string> contentTypeToExtension;
 
-    // Text types
     contentTypeToExtension["text/html"] = ".html";
     contentTypeToExtension["text/css"] = ".css";
     contentTypeToExtension["text/plain"] = ".txt";
     contentTypeToExtension["text/javascript"] = ".js";
     contentTypeToExtension["text/xml"] = ".xml";
 
-    // Application types
     contentTypeToExtension["application/json"] = ".json";
     contentTypeToExtension["application/javascript"] = ".js";
     contentTypeToExtension["application/pdf"] = ".pdf";
@@ -35,7 +59,6 @@ std::string getExtensionFromContentType(const std::string &contentType)
     contentTypeToExtension["application/xml"] = ".xml";
     contentTypeToExtension["application/octet-stream"] = ".bin";
 
-    // Image types
     contentTypeToExtension["image/jpeg"] = ".jpg";
     contentTypeToExtension["image/jpg"] = ".jpg";
     contentTypeToExtension["image/png"] = ".png";
@@ -45,18 +68,15 @@ std::string getExtensionFromContentType(const std::string &contentType)
     contentTypeToExtension["image/bmp"] = ".bmp";
     contentTypeToExtension["image/webp"] = ".webp";
 
-    // Video types
     contentTypeToExtension["video/mp4"] = ".mp4";
     contentTypeToExtension["video/avi"] = ".avi";
     contentTypeToExtension["video/quicktime"] = ".mov";
     contentTypeToExtension["video/x-msvideo"] = ".avi";
 
-    // Audio types
     contentTypeToExtension["audio/mpeg"] = ".mp3";
     contentTypeToExtension["audio/wav"] = ".wav";
     contentTypeToExtension["audio/ogg"] = ".ogg";
 
-    // Extract the main content type (remove charset, boundary, etc.)
     std::string mainType = contentType;
     size_t semicolonPos = contentType.find(';');
     if (semicolonPos != std::string::npos)
@@ -64,7 +84,6 @@ std::string getExtensionFromContentType(const std::string &contentType)
         mainType = contentType.substr(0, semicolonPos);
     }
 
-    // Trim whitespace
     size_t start = mainType.find_first_not_of(" \t");
     size_t end = mainType.find_last_not_of(" \t");
     if (start != std::string::npos && end != std::string::npos)
@@ -72,14 +91,12 @@ std::string getExtensionFromContentType(const std::string &contentType)
         mainType = mainType.substr(start, end - start + 1);
     }
 
-    // Look up the extension
     std::map<std::string, std::string>::const_iterator it = contentTypeToExtension.find(mainType);
     if (it != contentTypeToExtension.end())
     {
         return it->second;
     }
 
-    // Default fallback
     return ".bin";
 }
 
@@ -95,14 +112,15 @@ std::string generateUniqueString()
 
 void Client::LocationCheck()
 {
+    check_HOST();
     LocationMatch.path = httpRequest.getDecodedPath();
-    const std::vector<route> &routes = server->GetRoute();
+    const std::vector<route> &routes = server_matched->GetRoute();
 
     size_t best_match_len = 0;
 
     for (size_t i = 0; i < routes.size(); ++i)
     {
-        std::string route_path = server->GetRoute()[i].GetPats()["path:"];
+        std::string route_path = server_matched->GetRoute()[i].GetPats()["path:"];
         if (LocationMatch.path.compare(0, route_path.length(), route_path) == 0 &&
             (route_path.length() > best_match_len))
         {
@@ -130,7 +148,7 @@ void Client::LocationCheck()
     LocationMatch.index_file = BestMatch.GetPats()["index_file:"];
     LocationMatch.cgi = BestMatch.GetCGI();
     HttpRequest::print_map(LocationMatch.cgi);
-    LocationMatch.Error_pages = server->GetDefaultERRPages();
+    LocationMatch.Error_pages = server_matched->GetDefaultERRPages();
     LocationMatch.redirect_path = BestMatch.GetPats()["redirect:"];
     if (httpRequest.getMethod() == "POST")
     {
@@ -138,7 +156,7 @@ void Client::LocationCheck()
         LocationMatch.upload_directory = BestMatch.GetPats()["upload_directory:"];
         if (LocationMatch.upload_directory.empty())
             throw NOT_FOUND;
-        std::string content_typee = httpRequest.GetHeaderContent("Content-Type");
+        std::string content_typee = httpRequest.GetHeaderContent("content-type");
         if(content_typee.empty())
         {
             content_typee = "application/octet-stream";
@@ -301,7 +319,7 @@ void Client::parse_request(int fd, size_t _Readed)
         httpRequest.headers();
         LocationCheck();
         std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID HEADERS - - - - - -" << COLOR_RESET << std::endl;
-        if (httpRequest.getMethod() == "POST" && httpRequest.validbody(buffer, server->Getclient_body_size_limit()))
+        if (httpRequest.getMethod() == "POST" && httpRequest.validbody(buffer, server_matched->Getclient_body_size_limit()))
         {
             std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID BODY - - - - - - " << COLOR_RESET << std::endl;
             state = request_body;

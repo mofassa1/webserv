@@ -25,7 +25,7 @@ class Multiplexer
         int create_server_socket(unsigned short currentPort, std::string host);
         std::map<int, Client> client;
         std::map<int, std::string> soketOfHost;
-        std::map<int, Server*> clientOfServer;
+        std::map<int, std::vector<Server*>> clientOfServer;
         std::vector<int> allClients; 
 
     public:

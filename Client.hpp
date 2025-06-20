@@ -51,6 +51,8 @@ enum Client_state{
 typedef struct S_LocationMatch {
     std::string path;
     std::string directory;
+    std::string HOST;
+    std::string PORT;
     std::vector<std::string> methods;
     std::string index_file;
     std::string upload_directory;
@@ -83,7 +85,8 @@ class Client
         long         lastTime;
         Client_state state;
         HttpRequest  httpRequest;
-        Server *server;
+        Server *server_matched;
+        std::vector<Server*> servers;
         route  BestMatch;
         std::string buffer;
         size_t BytesReaded;
@@ -96,6 +99,7 @@ class Client
         ResponseInfos executeCGI(const std::string &cgiPath, const std::string &scriptPath);
 
         void    parse_request(int fd, size_t bytesReaded);
+        void    check_HOST();
         void    LocationCheck();
 
         ResponseInfos    GET();

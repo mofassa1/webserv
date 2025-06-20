@@ -58,3 +58,14 @@ std::string to_string(int value) {
     oss << value;
     return oss.str();
 }
+
+#include <string>
+
+std::string to_lowercase(const std::string& input){
+    std::string result = input;
+    for (size_t i = 0; i < result.length(); ++i) {
+        if (result[i] >= 'A' && result[i] <= 'Z')
+            result[i] += 32;
+    }
+    return result;
+}

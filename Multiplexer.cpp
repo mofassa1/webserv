@@ -144,7 +144,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
 
         c.buffer += buffer;
         c.BytesReaded += bytesReaded;
-        c.server = clientOfServer[eventFd];
+        c.servers = clientOfServer[eventFd];
         c.parse_request(eventFd, bytesReaded);
         if (c.state == done)
         {
@@ -294,7 +294,7 @@ void Multiplexer::run(confugParser &config)
                     for (size_t i = 0; i < count; i++)
                     {
                         if (config.GetAllData()[i]->isTheSeverSocket(eventFd))
-                            clientOfServer[clientSocket] = config.GetAllData()[i];
+                            clientOfServer[clientSocket].push_back(config.GetAllData()[i]);
                     }
                 }
             }

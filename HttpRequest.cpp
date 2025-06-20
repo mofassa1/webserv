@@ -95,6 +95,8 @@ bool validheadername(const std::string &name)
 
     for (size_t i = 0; i < name.size(); i++)
     {
+        if(!std::isalpha(name[0]))
+            return false;
         if (!std::isalnum(name[i]) && name[i] != '-')
             return false;
     }
@@ -107,7 +109,7 @@ bool HttpRequest::validheader(const std::vector<std::string> &vheader)
         return false;
     if (!validheadername(vheader[0]))
         return false;
-    mheaders[vheader[0]] = vheader[1];
+    mheaders[to_lowercase(vheader[0])] = vheader[1];
     return true;
 }
 
@@ -160,8 +162,8 @@ void HttpRequest::headers()
 
 bool HttpRequest::validbody(const std::string &buffer, size_t maxsize)
 {
-    hasContentLength = mheaders.find("Content-Length") != mheaders.end();
-    hasTransferEncoding = mheaders.find("Transfer-Encoding") != mheaders.end();
+    hasContentLength = mheaders.find("content-length") != mheaders.end();
+    hasTransferEncoding = mheaders.find("transfer-encoding") != mheaders.end();
     if (hasContentLength && hasTransferEncoding)
         throw BAD_REQUEST;
 
@@ -171,7 +173,7 @@ bool HttpRequest::validbody(const std::string &buffer, size_t maxsize)
     if (hasContentLength)
     {
         char *end;
-        std::string content_length_str = mheaders["Content-Length"];
+        std::string content_length_str = mheaders["content-length"];
         content_length_str.erase(0, content_length_str.find_first_not_of(" \t\r\n"));
         content_length_str.erase(content_length_str.find_last_not_of(" \t\r\n") + 1);
         content_length = static_cast<size_t>(strtoul(content_length_str.c_str(), &end, 10));
@@ -182,7 +184,7 @@ bool HttpRequest::validbody(const std::string &buffer, size_t maxsize)
     }
     if (hasTransferEncoding)
     {
-        if (mheaders["Transfer-Encoding"] != "chunked\r\n")
+        if (mheaders["transfer-encoding"] != "chunked\r\n")
             throw BAD_REQUEST; // Only chunked transfer encoding is supported
     }
     initBodyReadIndex(buffer);
@@ -379,6 +381,18 @@ std::string HttpRequest::getVersion() const
 {
     return tstart_line.version;
 }
+
+std::string HttpRequest::GetHost() {
+    std::map<std::string, std::string>::iterator it;
+    
+    for (it = mheaders.begin(); it != mheaders.end(); ++it) {
+        if (it->first == "host") {
+            return it->second; 
+        }
+    }
+    return "";
+}
+
 
 std::string HttpRequest::GetHeaderContent(std::string HEADER)
 {
