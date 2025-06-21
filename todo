@@ -20,3 +20,6 @@ fix error status for each message
  handle traversal attack in yaml file , parsing 
 
 TIMEOUT and close FD
+
+ TRANSFER ENCODING and DELETE 
+

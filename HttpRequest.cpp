@@ -176,8 +176,6 @@ bool HttpRequest::validbody(const std::string &buffer, size_t maxsize)
     {
         char *end;
         std::string content_length_str = mheaders["content-length"];
-        content_length_str.erase(0, content_length_str.find_first_not_of(" \t\r\n"));
-        content_length_str.erase(content_length_str.find_last_not_of(" \t\r\n") + 1);
         content_length = static_cast<size_t>(strtoul(content_length_str.c_str(), &end, 10));
         if (*end != '\0') // content_length == 0 || supprimed
             throw BAD_REQUEST;
@@ -186,7 +184,7 @@ bool HttpRequest::validbody(const std::string &buffer, size_t maxsize)
     }
     if (hasTransferEncoding)
     {
-        if (mheaders["transfer-encoding"] != "chunked\r\n")
+        if (mheaders["transfer-encoding"] != "chunked")
             throw BAD_REQUEST; // Only chunked transfer encoding is supported
     }
     initBodyReadIndex(buffer);
@@ -213,19 +211,13 @@ void HttpRequest::checkBodyCompletionOnEOF()
 
 void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesReaded, std::ofstream &upload_file, size_t EndofFile)
 {
-    size_t remaining = content_length - body_received;
-    size_t available = totalbytesReaded - _Read_index_body;
-    size_t to_read = std::min(remaining, available);
-
-    for (size_t i = 0; i < to_read; ++i)
-    {
-        char ch = buffer[_Read_index_body];
-        body += ch;
-        upload_file.write(&ch, sizeof(ch));
+    while(_Read_index_body < buffer.size()){
+        upload_file.write(&buffer[_Read_index_body], sizeof(buffer[_Read_index_body]));
         _Read_index_body++;
         body_received++;
     }
-
+    if(body_received > content_length)
+        throw BAD_REQUEST;
     if (body_received == content_length)
         chunk_done = true;
 }
@@ -275,21 +267,17 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
             size_t to_read = std::min(current_chunk_size, available);
 
             if (to_read == 0)
-                return; // Wait for more data
-
-            // Append to body and file (including binary data like '\0')
-            body.append(buffer, _Read_index_body, to_read);
+                return; 
             upload_file.write(&buffer[_Read_index_body], to_read);
-
             _Read_index_body += to_read;
             current_chunk_size -= to_read;
 
             std::cout << RED << "current_chunk_size: " << current_chunk_size << COLOR_RESET << std::endl; 
-            
             if (current_chunk_size == 0)
             {
                 reading_chunk_data = false;
                 reading_chunk_size = true;
+                chunk_done = true;
 
                 if (_Read_index_body + 1 < buffer.size() &&
                     buffer[_Read_index_body] == '\r' &&
@@ -316,10 +304,14 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
 
 void HttpRequest::parsebody(const std::string &buffer, size_t bytesReaded, size_t totalbytesReaded, std::ofstream &upload_file)
 {
+    std::cout << GREEN << "_Read_index_body: " << _Read_index_body << " && buffer.size(): " << buffer.size() << " && totalbytesReaded: " << totalbytesReaded << COLOR_RESET << std::endl;
     if (hasContentLength)
         contentLength(buffer, totalbytesReaded, upload_file, bytesReaded);
     if (hasTransferEncoding)
         TransferEncoding(buffer, totalbytesReaded, upload_file);
+    std::cout << std::endl;
+    std::cout << RED << "_Read_index_body: " << _Read_index_body << std::endl;
+    //std::cout << "$" << MAGENTA << buffer << "$" << std::endl;
 }
 
 void HttpRequest::parseRequestUri(const std::string &Uri)

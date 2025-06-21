@@ -322,6 +322,7 @@ void Client::parse_request(int fd, size_t _Readed)
         std::cout << GREEN << "[" << fd << "]" << " WAITING" << COLOR_RESET << std::endl;
         if (!httpRequest.VALID_CRLN_CRLN(buffer))
             break;
+        std::cout << MAGENTA << buffer << std::endl;
         state = request_start_line;
         httpRequest.storethebuffer(buffer);
         /* fall through */

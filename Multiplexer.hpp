@@ -36,7 +36,7 @@ class Multiplexer
         void    run(confugParser& config);
         int     NewClient(int eventFd);
         bool    isServerSocket(int fd);
-        void    handelRequest(int eventFd, std::string buffer, size_t bytesReaded, confugParser &config);
+        void    handelRequest(int eventFd, const std::string& buffer, size_t bytesReaded, confugParser &config);
         void    handelResponse(Client& client, int eventfd, confugParser &confug);
         /// //// signal handeler /////////
 

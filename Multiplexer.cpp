@@ -134,7 +134,7 @@ void epoll_change(int &EpoleFd, int &eventFd)
     }
 }
 
-void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesReaded, confugParser &config)
+void Multiplexer::handelRequest(int eventFd, const std::string& buffer, size_t bytesReaded, confugParser &config)
 {
     try
     {
@@ -145,6 +145,7 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         Client &c = client[eventFd];
 
         c.buffer += buffer;
+        // std::cout << "--$" << c.buffer << "$" << std::endl;
         c.BytesReaded += bytesReaded;
         c.servers = clientOfServer[eventFd];
         c.LocationMatch.PORT = soketOfPort[eventFd];
@@ -152,8 +153,8 @@ void Multiplexer::handelRequest(int eventFd, std::string buffer, size_t bytesRea
         if (c.state == done)
         {
             std::cout << GREEN << "[" << eventFd << "]" << "- - - - - - DONE - - - - - -" << COLOR_RESET << std::endl;
-            std::cout << CYAN << "[" << eventFd << "]\n"
-                      << c.buffer << COLOR_RESET << "$------------------------------------------------" << std::endl;
+            // std::cout << CYAN << "[" << eventFd << "]\n"
+            //           << c.buffer << COLOR_RESET << "$------------------------------------------------" << std::endl;
             if (c.httpRequest.getMethod() == "GET")
                 c.Response = c.GET();
             if (c.httpRequest.getMethod() == "POST")
@@ -324,8 +325,8 @@ void Multiplexer::run(confugParser &config)
                 }
                 else
                 {
-                    buffer[bytesReaded] = '\0';
-                    handelRequest(eventFd, buffer, bytesReaded, config);
+                    // buffer[bytesReaded] = '\0';
+                    handelRequest(eventFd, std::string(buffer, bytesReaded) , bytesReaded, config);
                 }
             }
             // Check if the event is for writting
