@@ -117,51 +117,6 @@ int Multiplexer::NewClient(int eventFd)
     return clientFd;
 }
 
-void Multiplexer::handelResponse(Client &client, int eventfd, confugParser &config)
-{
-    int fd = eventfd;
-    const ResponseInfos &response = client.Response;
-    std::ostringstream fullResponse;
-
-    // Status line
-    fullResponse << "HTTP/1.1 " << response.status << " "
-                 << client.getStatusMessage(client.Response.status) << "\r\n";
-
-    // Headers
-    for (std::map<std::string, std::string>::const_iterator it = response.headers.begin();
-         it != response.headers.end(); ++it)
-    {
-        fullResponse << it->first << ": " << it->second << "\r\n";
-    }
-
-    fullResponse << "\r\n";
-
-    // Body
-    fullResponse << response.body;
-
-    std::string finalOutput = fullResponse.str();
-    std::cerr << YELLOW << finalOutput << COLOR_RESET << std::endl;
-    ssize_t bytesSent = send(fd, finalOutput.c_str(), finalOutput.size(), 0);
-
-    if (bytesSent == -1)
-    {
-        std::cerr << RED << "[" << fd << "] - Error while sending response." << COLOR_RESET << std::endl;
-    }
-    else
-    {
-        std::cout << GREEN << "[" << fd << "] - Sent " << bytesSent << " bytes." << COLOR_RESET << std::endl;
-    }
-
-    // Close the connection after sending the response
-    // close(fd);
-    // epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, fd, NULL);
-    // config.removeClient(fd);
-    // clientOfServer.erase(fd);
-    // this->client.erase(fd);
-
-    std::cout << "[" << fd << "] - Connection closed after sending response." << std::endl;
-}
-
 long get_time_ms()
 {
     struct timeval tv;
@@ -222,11 +177,10 @@ void Multiplexer::run(confugParser &config)
             if (isServerSocket(eventFd))
             {
                 int clientSocket = NewClient(eventFd);
-                soketOfPort[clientSocket] = soketOfPort[eventFd];
                 if (clientSocket != -1)
                 {
                     config.newClient(clientSocket, eventFd);
-
+                    soketOfPort[clientSocket] = soketOfPort[eventFd];
                     size_t count = config.GetAllData().size();
                     for (size_t i = 0; i < count; i++)
                     {

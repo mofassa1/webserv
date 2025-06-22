@@ -72,6 +72,7 @@ void Client::LocationCheck()
     HttpRequest::print_map(LocationMatch.cgi);
     LocationMatch.Error_pages = server_matched->GetDefaultERRPages();
     LocationMatch.redirect_path = BestMatch.GetPats()["redirect:"];
+    LocationMatch.path = (LocationMatch.path == "/") ? "" : LocationMatch.path;
     if (httpRequest.getMethod() == "POST")
     {
         // GET FINAL URL

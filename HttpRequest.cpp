@@ -216,6 +216,8 @@ void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesRead
     // if content lenght is 0 
 
     while(_Read_index_body < buffer.size()){
+        if(body_received == content_length)
+            break;
         upload_file.write(&buffer[_Read_index_body], sizeof(buffer[_Read_index_body]));
         _Read_index_body++;
         body_received++;

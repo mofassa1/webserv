@@ -102,7 +102,7 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
 
         // Create the response
         ResponseInfos response;
-        response.status = 200; // Default to 200 OK
+        response.status = OK; // Default to 200 OK
         if (headers.find("Status") != headers.end())
         {
             response.status = std::stoi(headers["Status"]);

@@ -38,3 +38,5 @@ Content-Type: text/html
 
 <html><body><h1>File uploaded successfully</h1><p>Saved to: ./www/web//scripts/1750620592_24029.bin</p></body></html>%  
 }
+
+if path == '/'

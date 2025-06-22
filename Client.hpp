@@ -114,7 +114,7 @@ class Client
         // Copy assignment operator
         Client& operator=(const Client& other);
         
-        ResponseInfos   deleteDir(const std::string path);
+        ResponseInfos   deleteDir(const std::string& path);
         static ResponseInfos generateResponse(ResponseType type,  const std::string& path, int statusCode, S_LocationMatch& LocationMatch);
         static std::string getStatusMessage(int statusCode);
 };

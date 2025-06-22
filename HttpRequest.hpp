@@ -20,6 +20,7 @@
 
 #define COLOR_RESET "\033[0m"
 
+#define OK 200
 #define BAD_REQUEST 400
 #define UNAUTHORIZED 401
 #define FORBIDDEN 403
@@ -33,6 +34,7 @@
 #define UNKNOWN 0
 #define LENGTH_REQUIRED 411
 #define NO_CONTENT 204
+#define ACCEPTED 202
 
 
 typedef struct s_start_line
