@@ -126,10 +126,12 @@ void HttpRequest::split_header(const std::string &buffer, std::vector<std::strin
     if (header_name.find(" ") != std::string::npos)
         throw BAD_REQUEST;
     std::string header_value = buffer.substr(pos + 1);
-    if (!header_value.empty() && header_value[0] == ' ')
-        header_value.erase(0, 1);
-    header_value.erase(0, header_value.find_first_not_of(" \t\r\n"));
-    header_value.erase(header_value.find_last_not_of(" \t\r\n") + 1);    
+    if (header_value == "\r\n" || (header_value.size() >= 2 && header_value.compare(header_value.size() - 2, 2, "\r\n") == 0)) {
+        header_value.erase(0, header_value.find_first_not_of(" \t\r\n"));
+        header_value.erase(header_value.find_last_not_of(" \t\r\n") + 1);
+    }
+    else
+        throw BAD_REQUEST;
     words.clear();
     words.push_back(header_name);
     words.push_back(header_value);
@@ -149,7 +151,7 @@ void HttpRequest::headers()
 {
     std::vector<std::string> vheaders;
     if (lines.size() < 2)
-        throw 3;
+        throw BAD_REQUEST;
     for (size_t i = 1; i < lines.size(); i++)
     {
         if (lines[i] == "\r\n")
@@ -170,7 +172,7 @@ bool HttpRequest::validbody(const std::string &buffer, size_t maxsize)
         throw BAD_REQUEST;
 
     if (!hasContentLength && !hasTransferEncoding)
-        throw LENGTH_REQUIRED;
+        throw BAD_REQUEST;
 
     if (hasContentLength)
     {
@@ -210,7 +212,9 @@ void HttpRequest::checkBodyCompletionOnEOF()
 }
 
 void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesReaded, std::ofstream &upload_file, size_t EndofFile)
-{
+{ 
+    // if content lenght is 0 
+
     while(_Read_index_body < buffer.size()){
         upload_file.write(&buffer[_Read_index_body], sizeof(buffer[_Read_index_body]));
         _Read_index_body++;
