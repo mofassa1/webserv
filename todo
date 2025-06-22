@@ -21,5 +21,10 @@ fix error status for each message
 
 TIMEOUT and close FD
 
- TRANSFER ENCODING and DELETE 
+TRANSFER ENCODING and DELETE 
+
+//// 
+
+ content lenght == 0 and check the muchkil f dmagh 
+ complete DELETE 
 

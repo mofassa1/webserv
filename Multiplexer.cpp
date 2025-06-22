@@ -117,74 +117,6 @@ int Multiplexer::NewClient(int eventFd)
     return clientFd;
 }
 
-bool AreYouNew(int client_sockfd, std::map<int, Client> &clients)
-{
-    return clients.find(client_sockfd) == clients.end();
-}
-
-void epoll_change(int &EpoleFd, int &eventFd)
-{
-    struct epoll_event event;
-    event.events = EPOLLOUT | EPOLLET;
-    event.data.fd = eventFd;
-
-    if (epoll_ctl(EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1)
-    {
-        std::cerr << "epoll_ctl failed to modify event" << std::endl;
-    }
-}
-
-void Multiplexer::handelRequest(int eventFd, const std::string& buffer, size_t bytesReaded, confugParser &config)
-{
-    try
-    {
-        if (AreYouNew(eventFd, client))
-        {
-            client[eventFd] = Client();
-        }
-        Client &c = client[eventFd];
-
-        c.buffer += buffer;
-        // std::cout << "--$" << c.buffer << "$" << std::endl;
-        c.BytesReaded += bytesReaded;
-        c.servers = clientOfServer[eventFd];
-        c.LocationMatch.PORT = soketOfPort[eventFd];
-        c.parse_request(eventFd, bytesReaded);
-        if (c.state == done)
-        {
-            std::cout << GREEN << "[" << eventFd << "]" << "- - - - - - DONE - - - - - -" << COLOR_RESET << std::endl;
-            // std::cout << CYAN << "[" << eventFd << "]\n"
-            //           << c.buffer << COLOR_RESET << "$------------------------------------------------" << std::endl;
-            if (c.httpRequest.getMethod() == "GET")
-                c.Response = c.GET();
-            if (c.httpRequest.getMethod() == "POST")
-                c.Response = c.POST();
-            if (c.httpRequest.getMethod() == "DELETE")
-                c.Response = c.DELETE();
-            /////////////////////////////////
-            epoll_change(this->EpoleFd, eventFd);
-        }
-        // else
-        //     std::cout << YELLOW << "[" << eventFd << "]" << "- - - - - - STILL ON PARSING - - - - - - -" << COLOR_RESET << std::endl;
-    }
-    catch (int error)
-    {
-        std::cerr << RED << "[" << eventFd << "]" << "- - - - - ERROR: " << error << "- - - - - - - - " << COLOR_RESET << std::endl;
-        client[eventFd].Response = Client::generateResponse(RESPONSE_ERROR, "", error, client[eventFd].LocationMatch);
-        epoll_change(this->EpoleFd, eventFd);
-    }
-    catch (std::exception &e)
-    {
-        std::cerr << RED << "- - - - - Error in handle_request: " << e.what() << COLOR_RESET << std::endl;
-        close(eventFd);
-        epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
-        config.removeClient(eventFd);
-        clientOfServer.erase(eventFd);
-        client.erase(eventFd);
-        std::cout << "[" << eventFd << "]" << "- - - - - - - - CLOSED - - - - - -" << std::endl;
-    }
-}
-
 void Multiplexer::handelResponse(Client &client, int eventfd, confugParser &config)
 {
     int fd = eventfd;
@@ -255,21 +187,21 @@ void Multiplexer::run(confugParser &config)
                 Client &curClient = it->second;
                 double currenTime = get_time_ms();
 
-                // if (get_time_ms() - client[fd].lastTime > TIMEOUT_MS) // ????????????????????????
-                // {
-                //     client[fd].Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT, client[fd].LocationMatch);
-                //     handelResponse(client[fd], fd, config);
+                if (get_time_ms() - client[fd].lastTime > TIMEOUT_MS) // ????????????????????????
+                {
+                    client[fd].Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT, client[fd].LocationMatch);
+                    handelResponse(client[fd], fd, config);
 
-                //     // Remove client from map and list
-                //     close(fd);
-                //     config.removeClient(fd);
-                //     clientOfServer.erase(fd);
+                    // Remove client from map and list
+                    close(fd);
+                    config.removeClient(fd);
+                    clientOfServer.erase(fd);
 
-                //     client.erase(it);
-                //     allClients.erase(allClients.begin() + i);
-                //     epoll_ctl(EpoleFd, EPOLL_CTL_DEL, fd, NULL);
-                //     continue; // Don't increment i, list shifted left
-                // }
+                    client.erase(it);
+                    allClients.erase(allClients.begin() + i);
+                    epoll_ctl(EpoleFd, EPOLL_CTL_DEL, fd, NULL);
+                    continue; // Don't increment i, list shifted left
+                }
             }
 
             ++i; // Only increment if no erase happened
@@ -324,10 +256,7 @@ void Multiplexer::run(confugParser &config)
                     std::cout << "[" << eventFd << "]" << "- - - - - - - - CLOSED - - - - - -" << std::endl;
                 }
                 else
-                {
-                    // buffer[bytesReaded] = '\0';
-                    handelRequest(eventFd, std::string(buffer, bytesReaded) , bytesReaded, config);
-                }
+                    HandleRequest(eventFd, std::string(buffer, bytesReaded) , bytesReaded, config);
             }
             // Check if the event is for writting
             else if (events[i].events & EPOLLOUT)

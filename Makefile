@@ -6,7 +6,7 @@ CXX = c++
 
 RM = rm -rf
 
-SRC =  main.cpp confugParser.cpp route.cpp Server.cpp Multiplexer.cpp Client.cpp HttpRequest.cpp Utils.cpp \
+SRC =  main.cpp confugParser.cpp route.cpp Server.cpp Multiplexer.cpp Client.cpp HttpRequest.cpp Utils.cpp CGI.cpp HandleRequest.cpp HandleResponse.cpp HTTP_Methods.cpp  \
 
 OBJ = $(SRC:.cpp=.o)
 

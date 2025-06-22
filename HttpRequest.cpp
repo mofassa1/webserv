@@ -180,12 +180,12 @@ bool HttpRequest::validbody(const std::string &buffer, size_t maxsize)
         if (*end != '\0') // content_length == 0 || supprimed
             throw BAD_REQUEST;
         if (content_length > maxsize)
-            throw BAD_REQUEST; // Content-Length exceeds max size
+            throw BAD_REQUEST;
     }
     if (hasTransferEncoding)
     {
         if (mheaders["transfer-encoding"] != "chunked")
-            throw BAD_REQUEST; // Only chunked transfer encoding is supported
+            throw BAD_REQUEST;
     }
     initBodyReadIndex(buffer);
     return true;

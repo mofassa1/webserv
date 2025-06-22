@@ -59,7 +59,6 @@ std::string to_string(int value) {
     return oss.str();
 }
 
-#include <string>
 
 std::string to_lowercase(const std::string& input){
     std::string result = input;
@@ -68,4 +67,119 @@ std::string to_lowercase(const std::string& input){
             result[i] += 32;
     }
     return result;
+}
+
+bool AreYouNew(int client_sockfd, std::map<int, Client> &clients)
+{
+    return clients.find(client_sockfd) == clients.end();
+}
+
+void epoll_change(int &EpoleFd, int &eventFd)
+{
+    struct epoll_event event;
+    event.events = EPOLLOUT | EPOLLET;
+    event.data.fd = eventFd;
+
+    if (epoll_ctl(EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1)
+    {
+        std::cerr << "epoll_ctl failed to modify event" << std::endl;
+    }
+}
+
+std::string HOST_AND_PORT(std::string HOST, int PORT){
+    std::ostringstream oss;
+    oss << PORT;  
+    std::string str = oss.str();
+    std::string host_and_port = HOST + ":" + str;
+
+    return host_and_port;
+}
+
+std::string toLower(const std::string &str)
+{
+    std::string result = str;
+    std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+    return result;
+}
+
+std::string generateUniqueString()
+{
+    std::stringstream ss;
+    std::srand(std::time(0) + rand()); 
+    ss << std::time(0);                
+    ss << "_";
+    ss << rand() % 100000;
+    return ss.str();
+}
+
+std::string getFileExtension(const std::string &path)
+{
+    size_t dotPos = path.rfind('.');
+    if (dotPos != std::string::npos)
+        return path.substr(dotPos);
+    return "";
+}
+
+std::string getExtensionFromContentType(const std::string &contentType)
+{
+    std::map<std::string, std::string> contentTypeToExtension;
+
+    contentTypeToExtension["text/html"] = ".html";
+    contentTypeToExtension["text/css"] = ".css";
+    contentTypeToExtension["text/plain"] = ".txt";
+    contentTypeToExtension["text/javascript"] = ".js";
+    contentTypeToExtension["text/xml"] = ".xml";
+
+    contentTypeToExtension["application/json"] = ".json";
+    contentTypeToExtension["application/javascript"] = ".js";
+    contentTypeToExtension["application/pdf"] = ".pdf";
+    contentTypeToExtension["application/zip"] = ".zip";
+    contentTypeToExtension["application/xml"] = ".xml";
+    contentTypeToExtension["application/octet-stream"] = ".bin";
+
+    contentTypeToExtension["image/jpeg"] = ".jpg";
+    contentTypeToExtension["image/jpg"] = ".jpg";
+    contentTypeToExtension["image/png"] = ".png";
+    contentTypeToExtension["image/gif"] = ".gif";
+    contentTypeToExtension["image/svg+xml"] = ".svg";
+    contentTypeToExtension["image/x-icon"] = ".ico";
+    contentTypeToExtension["image/bmp"] = ".bmp";
+    contentTypeToExtension["image/webp"] = ".webp";
+
+    contentTypeToExtension["video/mp4"] = ".mp4";
+    contentTypeToExtension["video/avi"] = ".avi";
+    contentTypeToExtension["video/quicktime"] = ".mov";
+    contentTypeToExtension["video/x-msvideo"] = ".avi";
+
+    contentTypeToExtension["audio/mpeg"] = ".mp3";
+    contentTypeToExtension["audio/wav"] = ".wav";
+    contentTypeToExtension["audio/ogg"] = ".ogg";
+
+    std::string mainType = contentType;
+    size_t semicolonPos = contentType.find(';');
+    if (semicolonPos != std::string::npos)
+    {
+        mainType = contentType.substr(0, semicolonPos);
+    }
+
+    size_t start = mainType.find_first_not_of(" \t");
+    size_t end = mainType.find_last_not_of(" \t");
+    if (start != std::string::npos && end != std::string::npos)
+    {
+        mainType = mainType.substr(start, end - start + 1);
+    }
+
+    std::map<std::string, std::string>::const_iterator it = contentTypeToExtension.find(mainType);
+    if (it != contentTypeToExtension.end())
+    {
+        return it->second;
+    }
+
+    return ".bin";
+}
+
+bool isCGI(const std::string &fileExtension, const std::map<std::string, std::string> &cgiMap)
+{
+
+    return cgiMap.find(fileExtension) != cgiMap.end();
 }

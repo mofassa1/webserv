@@ -20,6 +20,7 @@
 #include <string>
 #include <dirent.h>  
 #include <sys/types.h> 
+#include <sys/wait.h>
 #include "HttpRequest.hpp"
 
 #define BUFFERSIZE 1000
@@ -119,3 +120,11 @@ class Client
 };
 
 std::string to_string(int value);
+bool AreYouNew(int client_sockfd, std::map<int, Client> &clients);
+void epoll_change(int &EpoleFd, int &eventFd);
+std::string HOST_AND_PORT(std::string HOST, int PORT);
+std::string toLower(const std::string &str);
+std::string generateUniqueString();
+std::string getFileExtension(const std::string &path);
+std::string getExtensionFromContentType(const std::string &contentType);
+bool isCGI(const std::string &fileExtension, const std::map<std::string, std::string> &cgiMap);
