@@ -181,8 +181,10 @@ bool HttpRequest::validbody(const std::string &buffer, size_t maxsize)
         content_length = static_cast<size_t>(strtoul(content_length_str.c_str(), &end, 10));
         if (*end != '\0') // content_length == 0 || supprimed
             throw BAD_REQUEST;
-        if (content_length > maxsize)
+        if (content_length > maxsize){
+            std::cout << "MAX SIZE" << std::endl;
             throw BAD_REQUEST;
+        }
     }
     if (hasTransferEncoding)
     {
@@ -403,6 +405,11 @@ std::string HttpRequest::GetHeaderContent(std::string HEADER)
         return it->second;
     return "";
 }
+
+std::string HttpRequest::GetBody() const{
+    return body;
+}
+
 
 void HttpRequest::print_vector(std::vector<std::string> &vec)
 {

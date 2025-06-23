@@ -118,6 +118,10 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         response.headers["Content-Length"] = to_string(response.body.size());
         break;
     }
+    case RESPONSE_CGI:
+    {
+        
+    }
     default:
         throw 500; // Internal server error
     }

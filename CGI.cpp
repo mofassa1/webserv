@@ -1,134 +1,3 @@
-// #include "Multiplexer.hpp"
-
-// ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &scriptPath)
-// {
-//     std::cout << "GOT HEEEEERE" << std::endl;
-//     // std::cout << GREEN << "Executing CGI script: " << cgiPath << COLOR_RESET << std::endl;
-//     // Generate temporary file names for input and output
-//     std::string outputFileName = "/tmp/cgi_output_" + generateUniqueString() + ".txt";
-//     std::string inputFileName = "/tmp/cgi_input_" + generateUniqueString() + ".txt";
-
-//     pid_t pid = fork();
-//     if (pid == -1)
-//         throw INTERNAL; // Internal Server Error
-
-//     if (pid == 0)
-//     {
-//         // Child process
-//         freopen(outputFileName.c_str(), "w+", stdout); // Redirect stdout to output file
-//         freopen(inputFileName.c_str(), "r", stdin);   // Redirect stdin to input file
-
-//         // Set up environment variables
-//         std::map<std::string, std::string> envVars;
-//         envVars["REQUEST_METHOD"] = httpRequest.getMethod();
-//         if (httpRequest.getMethod() == "POST"){
-//             envVars["CONTENT_LENGTH"] = std::to_string(httpRequest.content_length);
-//             // envVars["CONTENT_TYPE"] = httpRequest.getHeaderContent("Content-Type");
-//         }
-
-//         std::cout<< GREEN << scriptPath << COLOR_RESET << std::endl;
-//         envVars["SCRIPT_FILENAME"] = scriptPath;
-// // ...existing code...
-//         const std::map<std::string, std::string>& params = httpRequest.getQueryParams();
-//         std::string queryString;
-//         for (std::map<std::string, std::string>::const_iterator it = params.begin(); it != params.end(); ++it) {
-//             if (it != params.begin())
-//                 queryString += "&";
-//             queryString += it->first + "=" + it->second;
-//         }
-//         envVars["QUERY_STRING"] = queryString;
-//         // ...existing code...
-//         std::cout<< RED << "QuEEEEEEEEEEEERY"<<envVars["QUERY_STRING"] << COLOR_RESET << std::endl;
-//         envVars["CONTENT_LENGTH"] = std::to_string(httpRequest.content_length);
-//         // envVars["CONTENT_TYPE"] = httpRequest.getHeaderContent("Content-Type");
-
-//         // Convert environment variables to char* array
-//         std::vector<std::string> envStrings;
-//         for (const auto &pair : envVars)
-//             envStrings.push_back(pair.first + "=" + pair.second);
-
-//         char *envp[envStrings.size() + 1];
-//         for (size_t i = 0; i < envStrings.size(); ++i)
-//             envp[i] = const_cast<char *>(envStrings[i].c_str());
-//         envp[envStrings.size()] = nullptr;
-
-//         // Execute the CGI script
-//         char *argv[] = {const_cast<char *>(cgiPath.c_str()), const_cast<char *>(scriptPath.c_str()), nullptr};
-//         execve(cgiPath.c_str(), argv, envp);
-
-//         // If execve fails
-//         perror("execve failed");
-//         std::exit(1);
-//     }
-//     else
-//     {
-//         // Parent process
-//         if (httpRequest.getMethod() == "POST" && !httpRequest.body.empty())
-//         {
-//             // Write the request body to the input file
-//             std::ofstream inputFile(inputFileName);
-//             if (!inputFile.is_open())
-//                 throw INTERNAL; // Internal Server Error
-//             // inputFile << httpRequest.body;
-//             inputFile.close();
-//         }
-
-//         // Wait for the child process to finish
-//         int status;
-//         waitpid(pid, &status, 0);
-
-//         // Read the CGI output
-//         std::ifstream outputFile(outputFileName);
-//         if (!outputFile.is_open())
-//             throw INTERNAL; // Internal Server Error
-
-//         std::ostringstream outputBuffer;
-//         outputBuffer << outputFile.rdbuf();
-//         outputFile.close();
-
-//         // Clean up temporary files
-//         // std::remove(outputFileName.c_str());
-//         std::remove(inputFileName.c_str());
-
-//         // Parse the CGI output
-//         std::string cgiOutput = outputBuffer.str();
-//         size_t headerEnd = cgiOutput.find("\r\n\r\n");
-//         if (headerEnd == std::string::npos)
-//             throw INTERNAL; // Internal Server Error
-
-//         // Extract headers and body
-//         std::string headerPart = cgiOutput.substr(0, headerEnd);
-//         std::string bodyPart = cgiOutput.substr(headerEnd + 4);
-
-//         // Parse headers
-//         std::istringstream headerStream(headerPart);
-//         std::string line;
-//         std::map<std::string, std::string> headers;
-//         while (std::getline(headerStream, line) && !line.empty())
-//         {
-//             size_t colonPos = line.find(':');
-//             if (colonPos != std::string::npos)
-//             {
-//                 std::string key = line.substr(0, colonPos);
-//                 std::string value = line.substr(colonPos + 1);
-//                 headers[key] = value;
-//             }
-//         }
-
-//         // Create the response
-//         ResponseInfos response;
-//         response.status = OK; // Default to 200 OK
-//         if (headers.find("Status") != headers.end())
-//         {
-//             response.status = std::stoi(headers["Status"]);
-//         }
-//         response.body = bodyPart;
-//         response.headers = headers;
-//         response.contentType = headers["Content-Type"];
-
-//         return response;
-//     }
-// }
 #include "Multiplexer.hpp"
 
 ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &scriptPath)
@@ -137,7 +6,6 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
     // Generate temporary file names for input and output
     std::string outputFileName = "/tmp/cgi_output_" + generateUniqueString() + ".txt";
     std::string inputFileName = "/tmp/cgi_input_" + generateUniqueString() + ".txt";
-
     // // For POST: Write body to input file before forking
     // if (httpRequest.getMethod() == "POST" && !httpRequest.body.empty())
     // {
@@ -175,6 +43,7 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
         //         queryString += "&";
         //     queryString += it->first + "=" + it->second;
         // }
+        envVars["REDIRECT_STATUS"]  = "200";
         envVars["QUERY_STRING"] = httpRequest.getQueryParams();
         std::cout << RED << "QuEEEEEEEEEEEERY: " << envVars["QUERY_STRING"] << COLOR_RESET << std::endl;
 
@@ -197,6 +66,7 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
         execve(cgiPath.c_str(), argv, envp);
 
         perror("execve failed");
+            throw INTERNAL;
         std::exit(1);
     }
     else
@@ -214,19 +84,22 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
         outputBuffer << outputFile.rdbuf();
         outputFile.close();
 
-        // Clean up temporary files
         std::remove(outputFileName.c_str());
         std::remove(inputFileName.c_str());
 
         // Parse the CGI output
         std::string cgiOutput = outputBuffer.str();
-        size_t headerEnd = cgiOutput.find("\r\n\r\n");
-        if (headerEnd == std::string::npos)
-            throw INTERNAL; // Internal Server Error
 
-        // Extract headers and body
-        std::string headerPart = cgiOutput.substr(0, headerEnd);
-        std::string bodyPart = cgiOutput.substr(headerEnd + 4);
+        size_t headerEnd = cgiOutput.find("\r\n\r\n");
+        std::string headerPart, bodyPart;
+        if (headerEnd == std::string::npos) {
+            // No headers, treat all as body
+            headerPart = "";
+            bodyPart = cgiOutput;
+        } else {
+            headerPart = cgiOutput.substr(0, headerEnd);
+            bodyPart = cgiOutput.substr(headerEnd + 4);
+        }
 
         // Parse headers
         std::istringstream headerStream(headerPart);
@@ -239,11 +112,17 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
             {
                 std::string key = line.substr(0, colonPos);
                 std::string value = line.substr(colonPos + 1);
+                // Trim whitespace from value
+                value.erase(0, value.find_first_not_of(" \t\r\n"));
+                value.erase(value.find_last_not_of(" \t\r\n") + 1);
                 headers[key] = value;
             }
         }
-
         // Create the response
+        if (headerPart.empty())
+        {
+            headers["Content-Type"] = "text/html"; // Default content type if not specified
+        }
         ResponseInfos response;
         response.status = OK; // Default to 200 OK
         if (headers.find("Status") != headers.end())
@@ -253,7 +132,16 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
         response.body = bodyPart;
         response.headers = headers;
         response.contentType = headers["Content-Type"];
-
+        std::cout << RED << "gotggggggg" << std::endl;
         return response;
+
+        ///////////////////////////////////////////
+
+        // response.headers[""] = 
+        // response.headers[""] = 
+        // response.body = 
+        // response.status = OK;
+        // response.contentType = "text/html";
+        // response.
     }
 }

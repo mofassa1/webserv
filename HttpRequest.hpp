@@ -90,6 +90,7 @@ public:
     std::string getVersion() const;
     std::string GetHeaderContent(std::string HEADER);
     std::string GetHost();
+    std::string GetBody() const;
 
     bool hasContentLength;
     bool hasTransferEncoding;

@@ -30,7 +30,8 @@ enum ResponseType {
     RESPONSE_ERROR,
     RESPONSE_REDIRECT,
     RESPONSE_DIRECTORY_LISTING,
-    RESPONSE_DELETE
+    RESPONSE_DELETE,
+    RESPONSE_CGI
 };
 
 struct ResponseInfos {
@@ -61,6 +62,8 @@ typedef struct S_LocationMatch {
     std::string redirect_path;
     std::ofstream upload_file;
     std::map<std::string, std::string> cgi;
+    bool is_cgi;
+    std::string content_type_cgi;
     std::map<unsigned short, std::string>  Error_pages;
     bool autoindex;
     bool is_query_match;
@@ -68,13 +71,13 @@ typedef struct S_LocationMatch {
     // Default constructor
     S_LocationMatch()
         : path(""), directory(""), methods(), index_file(""),
-          upload_directory(""), cgi(), autoindex(false), is_query_match(false) {}
+          upload_directory(""), cgi(), autoindex(false), is_query_match(false), is_cgi(false) {}
 
     // Custom constructor
     S_LocationMatch(std::string p, std::string d, std::vector<std::string> m,
                     std::string i, std::string u, bool a, bool q)
         : path(p), directory(d), methods(m), index_file(i),
-          upload_directory(u), cgi(), autoindex(a), is_query_match(q) {}
+          upload_directory(u), cgi(), autoindex(a), is_query_match(q), is_cgi(false) {}
 
 } t_LocationMatch;
 

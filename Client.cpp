@@ -39,20 +39,36 @@ void Client::LocationCheck()
     const std::vector<route> &routes = server_matched->GetRoute();
 
     size_t best_match_len = 0;
-
     for (size_t i = 0; i < routes.size(); ++i)
     {
         std::string route_path = server_matched->GetRoute()[i].GetPats()["path:"];
-        if (LocationMatch.path.compare(0, route_path.length(), route_path) == 0 &&
-            (route_path.length() > best_match_len))
+        size_t len = route_path.length();
+
+        if (LocationMatch.path.compare(0, len, route_path) == 0)
         {
-            BestMatch = routes[i];
-            best_match_len = route_path.length();
-            match_found = true;
+            if (LocationMatch.path.length() == len || LocationMatch.path[len] == '/')
+            {
+                if (len > best_match_len)
+                {
+                    BestMatch = routes[i];
+                    best_match_len = len;
+                    match_found = true;
+                }
+            }
         }
     }
     if (!match_found)
-        throw NOT_FOUND;
+    {
+        for(int i = 0; i < routes.size(); i++)
+        {
+            if(server_matched->GetRoute()[i].GetPats()["path:"] == "/"){
+                BestMatch = routes[i];
+                match_found = true;
+            }
+        }
+        if(!match_found)
+            throw NOT_FOUND;
+    }
     LocationMatch.methods = BestMatch.GetMethods();
     bool method_allowed = false;
     for (size_t i = 0; i < LocationMatch.methods.size(); ++i)
@@ -84,10 +100,9 @@ void Client::LocationCheck()
         {
             content_typee = "application/octet-stream";
         }
-        else
-        {
-            content_typee.erase(0, content_typee.find_first_not_of(" \t\r\n"));
-            content_typee.erase(content_typee.find_last_not_of(" \t\r\n") + 1);
+        if(content_typee == "" || content_typee == ""){
+            LocationMatch.is_cgi = true;
+            LocationMatch.content_type_cgi = content_typee;
         }
         std::string file_extension = getExtensionFromContentType(content_typee);
         LocationMatch.upload_path = LocationMatch.directory + LocationMatch.path + "/" + LocationMatch.upload_directory + "/" + generateUniqueString() + file_extension;
