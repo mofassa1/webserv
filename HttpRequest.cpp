@@ -349,11 +349,13 @@ void HttpRequest::parseRequestUri(const std::string &Uri)
     {
         path = uri.substr(0, qmark);
         std::string query = uri.substr(qmark + 1);
+        query_param = query;
         parseParams(query, query_params);
     }
     else
     {
         path = uri;
+        query_param = "";
     }
     decoded_path = decodePercentEncoding(path);
 }

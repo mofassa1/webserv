@@ -119,6 +119,8 @@ ResponseInfos Client::GET()
 {
     std::string full_path = LocationMatch.directory + LocationMatch.path;
 
+    std::cout<< RED << "QuEEEEEEEEEEEERY"<<httpRequest.getDecodedPath() << COLOR_RESET << std::endl;
+
     struct stat file_info;
     if (stat(full_path.c_str(), &file_info) != 0)
         throw NOT_FOUND;
@@ -152,6 +154,7 @@ ResponseInfos Client::GET()
         // IF CGI
         std::string file_extension = getFileExtension(full_path);
         file_extension += ':';
+        std::cout << "file_extension: " << file_extension << std::endl;
         if (isCGI(file_extension, LocationMatch.cgi)){
         std::string path_cgi = LocationMatch.cgi[file_extension];
             return executeCGI(path_cgi, full_path);

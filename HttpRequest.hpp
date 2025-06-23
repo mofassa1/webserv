@@ -54,6 +54,7 @@ private:
     std::string body;
     std::string decoded_path;
     std::map<std::string, std::string> query_params;
+    std::string query_param;
 
 public:
     HttpRequest();
@@ -61,6 +62,7 @@ public:
 
     // Parsing functions
 
+    const std::string getQueryParams() const { return query_param; }
     bool VALID_CRLN_CRLN(const std::string &buffer);
     void storethebuffer(const std::string &buffer);
     void start_line();
