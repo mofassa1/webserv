@@ -221,6 +221,7 @@ void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesRead
         if(body_received == content_length)
             break;
         upload_file.write(&buffer[_Read_index_body], sizeof(buffer[_Read_index_body]));
+        body += buffer[_Read_index_body];
         _Read_index_body++;
         body_received++;
     }
@@ -277,6 +278,7 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
             if (to_read == 0)
                 return; 
             upload_file.write(&buffer[_Read_index_body], to_read);
+            body += buffer[_Read_index_body];
             _Read_index_body += to_read;
             current_chunk_size -= to_read;
 

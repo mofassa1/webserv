@@ -7,14 +7,14 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
     std::string outputFileName = "/tmp/cgi_output_" + generateUniqueString() + ".txt";
     std::string inputFileName = "/tmp/cgi_input_" + generateUniqueString() + ".txt";
     // For POST: Write body to input file before forking
-    // if (httpRequest.getMethod() == "POST" && !httpRequest.body.empty())
-    // {
-    //     std::ofstream inputFile(inputFileName);
-    //     if (!inputFile.is_open())
-    //         throw INTERNAL; // Internal Server Error
-    //     inputFile << httpRequest.body;
-    //     inputFile.close();
-    // }
+    if (httpRequest.getMethod() == "POST" && httpRequest.GetBody() != "")
+    {
+        std::ofstream inputFile(inputFileName);
+        if (!inputFile.is_open())
+            throw INTERNAL; // Internal Server Error
+        inputFile << httpRequest.GetBody();
+        inputFile.close();
+    }
 
     pid_t pid = fork();
     if (pid == -1)
@@ -147,6 +147,7 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
         response.body = bodyPart;
         response.headers = headers;
         response.contentType = headers["Content-Type"];
+        response.headers["Content-Length"] = to_string(response.body.size());
         std::cout << RED << "gotggggggg" << std::endl;
         return response;
 

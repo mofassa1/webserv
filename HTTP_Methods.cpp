@@ -3,7 +3,17 @@
 ResponseInfos Client::POST()
 {
     ResponseInfos response;
+    std::string full_path = LocationMatch.directory + LocationMatch.path;
 
+    std::string file_extension = getFileExtension(full_path);
+    file_extension += ':';
+    std::cout << "file_extension: " << file_extension << std::endl;
+    if (isCGI(file_extension, LocationMatch.cgi))
+    {
+        std::string path_cgi = LocationMatch.cgi[file_extension];
+        
+        return executeCGI(path_cgi, full_path);
+    }
     std::ostringstream ss;
     ss << "<html><body><h1>File uploaded successfully</h1>";
     ss << "<p>Saved to: " << LocationMatch.upload_path << "</p>";
@@ -18,14 +28,14 @@ ResponseInfos Client::POST()
     return response;
 }
 
-
 ResponseInfos Client::deleteDir(const std::string &path)
 {
     ResponseInfos response;
     std::ostringstream ss;
 
     DIR *dir = opendir(path.c_str());
-    if (!dir) {
+    if (!dir)
+    {
         response.status = FORBIDDEN;
         response.body = "<html><body><h1>Forbidden</h1><p>Unable to access the directory: " + path + "</p></body></html>";
         response.contentType = "text/html";
@@ -41,19 +51,24 @@ ResponseInfos Client::deleteDir(const std::string &path)
             std::string fullPath = path + "/" + entry->d_name;
             struct stat statbuf;
 
-            if (stat(fullPath.c_str(), &statbuf) == -1) {
+            if (stat(fullPath.c_str(), &statbuf) == -1)
+            {
                 closedir(dir);
                 throw FORBIDDEN;
             }
-            if (S_ISDIR(statbuf.st_mode)) {
+            if (S_ISDIR(statbuf.st_mode))
+            {
                 ResponseInfos resp = deleteDir(fullPath);
-                if (resp.status != OK) {
+                if (resp.status != OK)
+                {
                     closedir(dir);
                     return resp;
                 }
-            } 
-            else {
-                if (remove(fullPath.c_str()) != 0) {
+            }
+            else
+            {
+                if (remove(fullPath.c_str()) != 0)
+                {
                     closedir(dir);
                     response.status = FORBIDDEN;
                     response.body = "<html><body><h1>Forbidden</h1><p>Unable to delete file: " + fullPath + "</p></body></html>";
@@ -66,7 +81,8 @@ ResponseInfos Client::deleteDir(const std::string &path)
         }
     }
     closedir(dir);
-    if (rmdir(path.c_str()) == 0) {
+    if (rmdir(path.c_str()) == 0)
+    {
         ss << "<html><body><h1>Directory Deleted</h1><p>" << path << " was successfully deleted.</p></body></html>";
         response.status = OK;
         response.body = ss.str();
@@ -83,9 +99,7 @@ ResponseInfos Client::deleteDir(const std::string &path)
     return response;
 }
 
-
-
-ResponseInfos  Client::DELETE()
+ResponseInfos Client::DELETE()
 {
     ResponseInfos response;
     struct stat statbuf;
@@ -114,12 +128,11 @@ ResponseInfos  Client::DELETE()
     return response;
 }
 
-
 ResponseInfos Client::GET()
 {
     std::string full_path = LocationMatch.directory + LocationMatch.path;
 
-    std::cout<< RED << "QuEEEEEEEEEEEERY"<<httpRequest.getDecodedPath() << COLOR_RESET << std::endl;
+    std::cout << RED << "QuEEEEEEEEEEEERY" << httpRequest.getDecodedPath() << COLOR_RESET << std::endl;
 
     struct stat file_info;
     if (stat(full_path.c_str(), &file_info) != 0)
@@ -155,10 +168,11 @@ ResponseInfos Client::GET()
         std::string file_extension = getFileExtension(full_path);
         file_extension += ':';
         std::cout << "file_extension: " << file_extension << std::endl;
-        if (isCGI(file_extension, LocationMatch.cgi)){
-        std::string path_cgi = LocationMatch.cgi[file_extension];
+        if (isCGI(file_extension, LocationMatch.cgi))
+        {
+            std::string path_cgi = LocationMatch.cgi[file_extension];
             return executeCGI(path_cgi, full_path);
-        }  
+        }
         return generateResponse(RESPONSE_FILE, full_path, OK, LocationMatch);
     }
     throw NOT_FOUND;
