@@ -11,7 +11,7 @@ header("Content-Type: text/html");
 <body>
 
     <h2>Enter Your Details</h2>
-    <form action="/upload.php" method="post">
+    <form action="/upload.php" method="POST">
         <label for="name">Name:</label>
         <input type="text" id="name" name="name" required>
         <br><br>

@@ -1,18 +1,15 @@
-#!/usr/bin/php
 <?php
-// CGI header to tell the browser what kind of content to expect
 header("Content-Type: text/html");
 
-// Parse GET parameters
-$name = isset($_GET['name']) ? htmlspecialchars($_GET['name']) : 'Guest';
+$name = isset($_POST['name']) ? htmlspecialchars($_POST['name']) : 'Unknown';
+$age = isset($_POST['age']) ? htmlspecialchars($_POST['age']) : 'Unknown';
 
-// Output a simple HTML response
 echo "<!DOCTYPE html>";
 echo "<html>";
-echo "<head><title>PHP CGI GET Example</title></head>";
+echo "<head><title>Form Submission</title></head>";
 echo "<body>";
 echo "<h1>Hello, $name!</h1>";
-echo "<p>This is a response from a PHP CGI script using GET method.</p>";
+echo "<p>You are $age years old.</p>";
 echo "</body>";
 echo "</html>";
 ?>

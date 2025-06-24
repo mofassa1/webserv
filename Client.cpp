@@ -109,8 +109,8 @@ void Client::LocationCheck()
         std::cout << "upload_path: " << LocationMatch.upload_path << std::endl;
         LocationMatch.upload_file.open(LocationMatch.upload_path.c_str(), std::ios::out | std::ios::binary);
 
-        if (!LocationMatch.upload_file.is_open())
-            throw NOT_FOUND;
+        // if (!LocationMatch.upload_file.is_open()) // GO BACK
+        //     throw NOT_FOUND;
     }
 }
 

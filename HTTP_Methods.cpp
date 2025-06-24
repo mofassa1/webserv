@@ -1,3 +1,4 @@
+#include "HttpRequest.hpp"
 #include "Multiplexer.hpp"
 
 ResponseInfos Client::POST()
@@ -5,11 +6,13 @@ ResponseInfos Client::POST()
     ResponseInfos response;
     std::string full_path = LocationMatch.directory + LocationMatch.path;
 
+    std::cout << MAGENTA << "FF THIIIIIIIIIIIS" << std::endl;
     std::string file_extension = getFileExtension(full_path);
     file_extension += ':';
     std::cout << "file_extension: " << file_extension << std::endl;
     if (isCGI(file_extension, LocationMatch.cgi))
     {
+        std::cout << "THIS IS CGI IN POST" << std::endl;
         std::string path_cgi = LocationMatch.cgi[file_extension];
         
         return executeCGI(path_cgi, full_path);
