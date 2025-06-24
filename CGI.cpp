@@ -6,7 +6,7 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
     // Generate temporary file names for input and output
     std::string outputFileName = "/tmp/cgi_output_" + generateUniqueString() + ".txt";
     std::string inputFileName = "/tmp/cgi_input_" + generateUniqueString() + ".txt";
-    // // For POST: Write body to input file before forking
+    // For POST: Write body to input file before forking
     // if (httpRequest.getMethod() == "POST" && !httpRequest.body.empty())
     // {
     //     std::ofstream inputFile(inputFileName);
@@ -33,6 +33,10 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
 
         // Set up environment variables
         std::map<std::string, std::string> envVars;
+        std::string cookieHeader = httpRequest.GetHeaderContent("Cookie");
+        if (!cookieHeader.empty()) {
+            envVars["HTTP_COOKIE"] = cookieHeader;
+        }
         envVars["REQUEST_METHOD"] = httpRequest.getMethod();
         envVars["SCRIPT_FILENAME"] = scriptPath;
 
@@ -115,7 +119,18 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
                 // Trim whitespace from value
                 value.erase(0, value.find_first_not_of(" \t\r\n"));
                 value.erase(value.find_last_not_of(" \t\r\n") + 1);
-                headers[key] = value;
+                if (key == "Set-Cookie") {
+                    // Multiple Set-Cookie headers are allowed
+                    if (headers.count("Set-Cookie")) {
+                        headers["Set-Cookie"] += "\r\nSet-Cookie: " + value;
+                    } else {
+                        headers["Set-Cookie"] = value;
+                    }
+                }
+                else {
+                    headers[key] = value;
+                }
+                
             }
         }
         // Create the response
