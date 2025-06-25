@@ -6,13 +6,13 @@ ResponseInfos Client::POST()
     ResponseInfos response;
     std::string full_path = LocationMatch.directory + LocationMatch.path;
 
-    std::cout << MAGENTA << "FF THIIIIIIIIIIIS" << std::endl;
+    //std::cout << MAGENTA << "FF THIIIIIIIIIIIS" << std::endl;
     std::string file_extension = getFileExtension(full_path);
     file_extension += ':';
-    std::cout << "file_extension: " << file_extension << std::endl;
+    //std::cout << "file_extension: " << file_extension << std::endl;
     if (isCGI(file_extension, LocationMatch.cgi))
     {
-        std::cout << "THIS IS CGI IN POST" << std::endl;
+        //std::cout << "THIS IS CGI IN POST" << std::endl;
         std::string path_cgi = LocationMatch.cgi[file_extension];
         
         return executeCGI(path_cgi, full_path);
@@ -135,7 +135,7 @@ ResponseInfos Client::GET()
 {
     std::string full_path = LocationMatch.directory + LocationMatch.path;
 
-    std::cout << RED << "QuEEEEEEEEEEEERY" << httpRequest.getDecodedPath() << COLOR_RESET << std::endl;
+    //std::cout << RED << "QuEEEEEEEEEEEERY" << httpRequest.getDecodedPath() << COLOR_RESET << std::endl;
 
     struct stat file_info;
     if (stat(full_path.c_str(), &file_info) != 0)
@@ -170,7 +170,7 @@ ResponseInfos Client::GET()
         // IF CGI
         std::string file_extension = getFileExtension(full_path);
         file_extension += ':';
-        std::cout << "file_extension: " << file_extension << std::endl;
+        //std::cout << "file_extension: " << file_extension << std::endl;
         if (isCGI(file_extension, LocationMatch.cgi))
         {
             std::string path_cgi = LocationMatch.cgi[file_extension];

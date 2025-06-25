@@ -7,6 +7,7 @@
 #include <vector>
 #include <map>
 
+#include <algorithm> // for std::find
 
 class route
 {

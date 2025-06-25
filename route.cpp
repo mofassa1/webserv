@@ -1,18 +1,33 @@
 #include "route.hpp"
 
 ///////// Seters .//////
+
 void route::SetMethods(std::string value)
 {
+    if (std::find(this->methods.begin(), this->methods.end(), value) != this->methods.end())
+    {
+        throw std::runtime_error(value + " is duplicated !!!");
+    }
     this->methods.push_back(value);
 }
 
+
 void route::SetPaths(std::string key, std::string value)
 {
+
+   if (this->paths.find(key) != this->paths.end())
+   {
+        throw std::runtime_error(key + " is duplicated !!!");
+   }
     this->paths[key] = value;
 }
 
 void route::Setcgi(std::string key, std::string value)
 {
+    if (this->cgi.find(key) != this->cgi.end())
+    {
+        throw std::runtime_error(key + " is duplicated !!!");
+    }
     this->cgi[key] = value;
 }
 
@@ -49,5 +64,5 @@ route::route()
 
 route::~route()
 {
-    // std::cout << "route distructor called !!!!!!!!!!!!" << std::endl;
+    // //std::cout << "route distructor called !!!!!!!!!!!!" << std::endl;
 }

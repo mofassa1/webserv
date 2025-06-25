@@ -26,8 +26,9 @@ class Multiplexer
         std::map<int, Client> client;
         std::map<int, std::string> soketOfHost;
         std::map<int, int> soketOfPort;
-        std::map<int, std::vector<Server*> > clientOfServer;
+        std::map<int, std::vector<Server*>> clientOfServer;
         std::vector<int> allClients; 
+        std::map<int, long> lastTime;
 
     public:
         Multiplexer(/* args */);

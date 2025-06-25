@@ -106,7 +106,7 @@ void Client::LocationCheck()
         }
         std::string file_extension = getExtensionFromContentType(content_typee);
         LocationMatch.upload_path = LocationMatch.directory + LocationMatch.path + "/" + LocationMatch.upload_directory + "/" + generateUniqueString() + file_extension;
-        std::cout << "upload_path: " << LocationMatch.upload_path << std::endl;
+        //std::cout << "upload_path: " << LocationMatch.upload_path << std::endl;
         LocationMatch.upload_file.open(LocationMatch.upload_path.c_str(), std::ios::out | std::ios::binary);
 
         // if (!LocationMatch.upload_file.is_open()) // GO BACK
@@ -119,25 +119,25 @@ void Client::parse_request(int fd, size_t _Readed)
     switch (state)
     {
     case waiting:
-        std::cout << GREEN << "[" << fd << "]" << " WAITING" << COLOR_RESET << std::endl;
+        //std::cout << GREEN << "[" << fd << "]" << " WAITING" << COLOR_RESET << std::endl;
         if (!httpRequest.VALID_CRLN_CRLN(buffer))
             break;
-        std::cout << MAGENTA << buffer << std::endl;
+        //std::cout << MAGENTA << buffer << std::endl;
         state = request_start_line;
         httpRequest.storethebuffer(buffer);
         /* fall through */
     case request_start_line:
         httpRequest.start_line();
-        std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID START LINE - - - - - - -" << COLOR_RESET << std::endl;
+        //std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID START LINE - - - - - - -" << COLOR_RESET << std::endl;
         state = request_headers;
         /* fall through */
     case request_headers:
         httpRequest.headers();
         LocationCheck();
-        std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID HEADERS - - - - - -" << COLOR_RESET << std::endl;
+        //std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID HEADERS - - - - - -" << COLOR_RESET << std::endl;
         if (httpRequest.getMethod() == "POST" && httpRequest.validbody(buffer, server_matched->Getclient_body_size_limit()))
         {
-            std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID BODY - - - - - - " << COLOR_RESET << std::endl;
+            //std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID BODY - - - - - - " << COLOR_RESET << std::endl;
             state = request_body;
         }
         else

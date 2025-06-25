@@ -139,12 +139,12 @@ void HttpRequest::split_header(const std::string &buffer, std::vector<std::strin
 
 void HttpRequest::print_map(const std::map<std::string, std::string> &m)
 {
-    std::cout << YELLOW;
+    //std::cout << YELLOW;
     for (std::map<std::string, std::string>::const_iterator it = m.begin(); it != m.end(); ++it)
     {
-        std::cout << it->first << "$=>$" << it->second << "$" << std::endl;
+        //std::cout << it->first << "$=>$" << it->second << "$" << std::endl;
     }
-    std::cout << COLOR_RESET;
+    //std::cout << COLOR_RESET;
 }
 
 void HttpRequest::headers()
@@ -182,7 +182,7 @@ bool HttpRequest::validbody(const std::string &buffer, size_t maxsize)
         if (*end != '\0') // content_length == 0 || supprimed
             throw BAD_REQUEST;
         if (content_length > maxsize){
-            std::cout << "MAX SIZE" << std::endl;
+            //std::cout << "MAX SIZE" << std::endl;
             throw BAD_REQUEST;
         }
     }
@@ -282,7 +282,7 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
             _Read_index_body += to_read;
             current_chunk_size -= to_read;
 
-            std::cout << RED << "current_chunk_size: " << current_chunk_size << COLOR_RESET << std::endl; 
+            //std::cout << RED << "current_chunk_size: " << current_chunk_size << COLOR_RESET << std::endl; 
             if (current_chunk_size == 0)
             {
                 reading_chunk_data = false;
@@ -314,14 +314,14 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
 
 void HttpRequest::parsebody(const std::string &buffer, size_t bytesReaded, size_t totalbytesReaded, std::ofstream &upload_file)
 {
-    std::cout << GREEN << "_Read_index_body: " << _Read_index_body << " && buffer.size(): " << buffer.size() << " && totalbytesReaded: " << totalbytesReaded << COLOR_RESET << std::endl;
+    //std::cout << GREEN << "_Read_index_body: " << _Read_index_body << " && buffer.size(): " << buffer.size() << " && totalbytesReaded: " << totalbytesReaded << COLOR_RESET << std::endl;
     if (hasContentLength)
         contentLength(buffer, totalbytesReaded, upload_file, bytesReaded);
     if (hasTransferEncoding)
         TransferEncoding(buffer, totalbytesReaded, upload_file);
-    std::cout << std::endl;
-    std::cout << RED << "_Read_index_body: " << _Read_index_body << std::endl;
-    //std::cout << "$" << MAGENTA << buffer << "$" << std::endl;
+    //std::cout << std::endl;
+    //std::cout << RED << "_Read_index_body: " << _Read_index_body << std::endl;
+    ////std::cout << "$" << MAGENTA << buffer << "$" << std::endl;
 }
 
 void HttpRequest::parseRequestUri(const std::string &Uri)
@@ -415,10 +415,10 @@ std::string HttpRequest::GetBody() const{
 
 void HttpRequest::print_vector(std::vector<std::string> &vec)
 {
-    std::cout << YELLOW;
+    //std::cout << YELLOW;
     for (size_t i = 0; i < vec.size(); i++)
     {
-        std::cout << vec[i];
+        //std::cout << vec[i];
     }
-    std::cout << COLOR_RESET;
+    //std::cout << COLOR_RESET;
 }

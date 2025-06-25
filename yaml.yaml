@@ -65,6 +65,7 @@ server:
     redirect: /deprecated
     methods: GET POST 
     upload_directory: ./uploads
+    directory: ./www
   route:
     path: /deprecated
     directory: ./www
@@ -93,7 +94,6 @@ server:
     methods: GET POST
     index_file: welcome.html
     upload_directory: uploads
-    index_file: welcome.html
   route:
     path: /deprecated
     directory: ./www

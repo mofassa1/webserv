@@ -24,7 +24,18 @@ void Server::SetServerName(std::string value){
     this->server_name = value;
 }
 
+std::string toString(unsigned short value) {
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
+}
+
 void Server::SetDefaultERRPages(unsigned short key, std::string value){
+
+    if (this->default_error_pages.find(key) != this->default_error_pages.end()) {
+        std::string message = "error page duplicated: " + toString(key);
+        throw std::runtime_error(message);
+    }
     this->default_error_pages[key] = value;
 }
 
@@ -75,7 +86,7 @@ Server::Server() {
 
 Server::~Server() {
 
-    std::cout << "server distructor called !!!" << std::endl;
+    //std::cout << "server distructor called !!!" << std::endl;
 }
 
 
