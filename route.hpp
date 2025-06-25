@@ -14,6 +14,7 @@ class route
     private:
         std::map<std::string, std::string> paths;
         std::map<std::string, std::string> cgi;
+        std::vector<std::string> index_file;
         std::vector<std::string> methods;
         bool auto_index;
 
@@ -28,6 +29,8 @@ class route
         std::vector<std::string> GetMethods(void);
         std::map<std::string, std::string> GetCGI();
         bool GetAutoIndex(void);
+        std::vector<std::string> getIndexFiles();
+        void SetIndexFile(std::vector<std::string> &words);
         route(/* args */);
         ~route();
 };

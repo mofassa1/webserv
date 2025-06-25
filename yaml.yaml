@@ -44,7 +44,7 @@ server:
       .py:  /usr/bin/python3
   route:
     path: /videos
-    directory: /goinfre/amiftah/videos
+    directory: /goinfre/afadouac/videos
     methods: GET
   route:
     path: /web

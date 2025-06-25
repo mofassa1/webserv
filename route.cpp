@@ -36,8 +36,20 @@ void route::SetAutoIndex(void){
         throw std::runtime_error("duplicated setting of autoIndex !!");
     auto_index = true;
 }
+void route::SetIndexFile(std::vector<std::string> &words){
+    for (size_t i = 0; i < words.size(); i++)
+    {
+        if (words[i][0] == '#')
+            return ;
+        index_file.push_back(words[i]);
+    }
+    
+}
 
 /// ////// Geters //////////
+std::vector<std::string> route::getIndexFiles(){
+    return this->index_file;
+}
 
 std::map<std::string, std::string> route::GetPats(void)
 {

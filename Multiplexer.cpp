@@ -125,7 +125,6 @@ long get_time_ms()
 
 void Multiplexer::run(confugParser &config)
 {
-
     while (true)
     {
         struct epoll_event events[1024];

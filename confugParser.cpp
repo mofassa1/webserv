@@ -147,9 +147,6 @@ std::string confugParser::parseRoute(std::string line1, Server *newServer, std::
     int spacesCount;
     std::string inerscoop = "route:";
 
-    std::string PathsKeys[4] = {
-        "path:" ,"directory:", "index_file:" ,"upload_directory:"
-    };
 
     while (std::getline(file, line))
     {
@@ -202,12 +199,18 @@ std::string confugParser::parseRoute(std::string line1, Server *newServer, std::
             inerscoop = "cgi";
         }
         else if (spacesCount == 4 && (words[0] ==  "path:" || 
-                words[0] ==  "directory:" || words[0] == "index_file:" 
+                words[0] ==  "directory:"  
                 || words[0] == "upload_directory:"))
         {
-            if (words.size() != 2)
+            if ((words.size() > 2 && words[2][0] != '#') || words.size() == 1)
                 std::runtime_error("error : the key word must be followed by one arguiment");
             Newoute.SetPaths(words[0], words[1]);
+        }
+        else if (spacesCount == 4 && words[0] ==  "index_file:")
+        {
+            if (words.size() < 2)
+                std::runtime_error("error : in the index_file ");
+            Newoute.SetIndexFile(words);
         }
         else if (spacesCount == 6 && inerscoop == "cgi" && words.size() == 2 )
         {
