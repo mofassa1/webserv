@@ -82,7 +82,7 @@ void epoll_change(int &EpoleFd, int &eventFd)
 
     if (epoll_ctl(EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1)
     {
-        //std::cout << "epoll_ctl failed to modify event" << std::endl;
+        ////std::cout << "epoll_ctl failed to modify event" << std::endl;
     }
 }
 

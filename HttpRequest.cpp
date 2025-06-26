@@ -139,12 +139,12 @@ void HttpRequest::split_header(const std::string &buffer, std::vector<std::strin
 
 void HttpRequest::print_map(const std::map<std::string, std::string> &m)
 {
-    //std::cout << YELLOW;
+    ////std::cout << YELLOW;
     for (std::map<std::string, std::string>::const_iterator it = m.begin(); it != m.end(); ++it)
     {
-        //std::cout << it->first << "$=>$" << it->second << "$" << std::endl;
+        ////std::cout << it->first << "$=>$" << it->second << "$" << std::endl;
     }
-    //std::cout << COLOR_RESET;
+    ////std::cout << COLOR_RESET;
 }
 
 void HttpRequest::headers()
@@ -182,7 +182,7 @@ bool HttpRequest::validbody(const std::string &buffer, size_t maxsize)
         if (*end != '\0') // content_length == 0 || supprimed
             throw BAD_REQUEST;
         if (content_length > maxsize){
-            //std::cout << "MAX SIZE" << std::endl;
+            ////std::cout << "MAX SIZE" << std::endl;
             throw BAD_REQUEST;
         }
     }
@@ -404,10 +404,10 @@ std::string HttpRequest::GetBody() const{
 
 void HttpRequest::print_vector(std::vector<std::string> &vec)
 {
-    std::cout << YELLOW;
+    //std::cout << YELLOW;
     for (size_t i = 0; i < vec.size(); i++)
     {
-        std::cout << vec[i];
+        //std::cout << vec[i];
     }
-    std::cout << COLOR_RESET;
+    //std::cout << COLOR_RESET;
 }

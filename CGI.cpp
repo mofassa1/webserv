@@ -68,8 +68,8 @@ bool parseCGIHeaders(const std::string& cgi_output, std::map<std::string, std::s
 
 ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &scriptPath)
 {
-    std::cout << "GOT HEEEEERE" << std::endl;
-    std::cout << httpRequest.getMethod() << std::endl;
+    //std::cout << "GOT HEEEEERE" << std::endl;
+    //std::cout << httpRequest.getMethod() << std::endl;
     
     // Generate temporary file names for input and output
     std::string outputFileName = "/tmp/cgi_output_" + generateUniqueString() + ".txt";
@@ -142,7 +142,7 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
         // For POST: Write body to input file after forking
         if (httpRequest.getMethod() == "POST" && !httpRequest.GetBody().empty()) {
             const std::string& body = httpRequest.GetBody();
-            std::cout << MAGENTA << body << std::endl;
+            //std::cout << MAGENTA << body << std::endl;
             std::ofstream inputFile(inputFileName.c_str(), std::ios::out | std::ios::trunc);
             if (!inputFile.is_open()) {
                 std::cerr << "Failed to open input file for CGI script" << std::endl;
@@ -300,7 +300,7 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
         contentLengthStream << response.body.size();
         response.headers["Content-Length"] = contentLengthStream.str();
         
-        std::cout << RED << "gotggggggg" << std::endl;
+        //std::cout << RED << "gotggggggg" << std::endl;
         return response;
     }
 }

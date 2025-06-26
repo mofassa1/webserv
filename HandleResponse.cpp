@@ -156,13 +156,13 @@ void Multiplexer::handelResponse(Client &client, int eventfd, confugParser &conf
 
     if (bytesSent == -1)
     {
-        std::cout << RED << "[" << fd << "] - Error while sending response." << COLOR_RESET << std::endl;
+        //std::cout << RED << "[" << fd << "] - Error while sending response." << COLOR_RESET << std::endl;
     }
     else
     {
-        std::cout << GREEN << "[" << fd << "] - Sent " << bytesSent << " bytes." << COLOR_RESET << std::endl;
+        //std::cout << GREEN << "[" << fd << "] - Sent " << bytesSent << " bytes." << COLOR_RESET << std::endl;
     }
-    std::cout << "[" << fd << "] - Connection closed after sending response." << std::endl;
+    //std::cout << "[" << fd << "] - Connection closed after sending response." << std::endl;
 }
 
 

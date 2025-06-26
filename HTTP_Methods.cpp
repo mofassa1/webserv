@@ -176,7 +176,7 @@ ResponseInfos Client::GET()
         // IF CGI
         std::string file_extension = getFileExtension(full_path);
         file_extension += ':';
-        std::cout << "file_extension: " << file_extension << std::endl;
+        //std::cout << "file_extension: " << file_extension << std::endl;
         if (isCGI(file_extension, LocationMatch.cgi))
         {
             std::string path_cgi = LocationMatch.cgi[file_extension];

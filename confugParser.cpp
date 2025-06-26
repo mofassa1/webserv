@@ -17,7 +17,7 @@ confugParser::~confugParser()
     {
         delete fileData[i];
     }
-    //std::cout << "distructor called !!!!!!!" << std::endl;
+    ////std::cout << "distructor called !!!!!!!" << std::endl;
 }
 
 
@@ -79,11 +79,11 @@ void confugParser::ServerParser(Server *newServer)
 
 void confugParser::Error(const std::vector<std::string> &words)
 {
-    //std::cout << "Error at line : " << std::endl << " '";
+    ////std::cout << "Error at line : " << std::endl << " '";
 
     for (size_t i = 0; i < words.size(); i++)
-        //std::cout << words[i];
-    //std::cout << " '" << std::endl;
+        ////std::cout << words[i];
+    ////std::cout << " '" << std::endl;
     throw std::runtime_error("Syntax error");
 }
 
@@ -150,14 +150,14 @@ std::string confugParser::parseRoute(std::string line1, Server *newServer, std::
 
     while (std::getline(file, line))
     {
-        // //std::cout << "the current line is : " << line << std::endl;
+        // ////std::cout << "the current line is : " << line << std::endl;
 
         spacesCount = CountSpaces(line);
         if (spacesCount < 4)
         {
             if (Newoute.GetMethods().empty() || Newoute.GetPats()["path:"].empty() || \
                     Newoute.GetPats()["directory:"].empty() ){
-                        //std::cout << "exiption thrown !! " << std::endl;
+                        ////std::cout << "exiption thrown !! " << std::endl;
                     throw std::runtime_error("invalid route !!");
                     }
             //// i have to check in the route containing all the data before pushing it ///////
@@ -188,7 +188,7 @@ std::string confugParser::parseRoute(std::string line1, Server *newServer, std::
                 throw std::runtime_error(words[0] + " : must have a value !!!!!!!!!!");
             for (size_t i = 1; i < words.size(); i++)
             {
-                //std::cout << "in methods block top : " << words[i] <<std::endl;
+                ////std::cout << "in methods block top : " << words[i] <<std::endl;
                 Newoute.SetMethods(words[i]);
             }
         }
@@ -216,8 +216,8 @@ std::string confugParser::parseRoute(std::string line1, Server *newServer, std::
         {
             if (words[0][0] != '.')
                 throw std::runtime_error("syntax error");
-            // //std::cout << " 66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"  << std::endl;
-            //std::cout << "cgi is setting with key : ' " << words[0] << " '" << "and the value :  " << words[1] << std::endl;
+            // ////std::cout << " 66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"  << std::endl;
+            ////std::cout << "cgi is setting with key : ' " << words[0] << " '" << "and the value :  " << words[1] << std::endl;
             Newoute.Setcgi(words[0], words[1]);
         }
         else
@@ -241,7 +241,7 @@ void confugParser::parseServerName(std::vector<std::string> &line, Server *newSe
 
     if (newServer->GetServerName() != "")
     {
-        //std::cout << "SeconfugParser::rver name doubled !!!!!!!!!!" << std::endl;
+        ////std::cout << "SeconfugParser::rver name doubled !!!!!!!!!!" << std::endl;
         Error(line);
     }
 
@@ -253,7 +253,7 @@ void confugParser::parseCBSL(std::vector<std::string> &line, Server *newServer)
 {
     // if (line.size() != 2)
     // {
-    //     //std::cout << "Invalid arguiments count" << std::endl;
+    //     ////std::cout << "Invalid arguiments count" << std::endl;
     //     // if (newServer)
     //     //     delete newServer;
     //     Error(line);
@@ -264,7 +264,7 @@ void confugParser::parseCBSL(std::vector<std::string> &line, Server *newServer)
         throw std::runtime_error("invalid arguiments count !");
     if (newServer->Getclient_body_size_limit() != 0)
     {
-        //std::cout << "client_body_size_limit doubled !!!!" << std::endl;
+        ////std::cout << "client_body_size_limit doubled !!!!" << std::endl;
         if (newServer)
             delete newServer;
         Error(line);
@@ -348,7 +348,7 @@ void confugParser::Parser(const std::string &PathToConfig) {
     {
         start:
         // lineNumber++;
-        // //std::cout << "line number is : " << lineNumber << " . the line is : " << line << std::endl;
+        // ////std::cout << "line number is : " << lineNumber << " . the line is : " << line << std::endl;
         int spacesCount;
         std::vector<std::string> words;
 
@@ -367,8 +367,8 @@ void confugParser::Parser(const std::string &PathToConfig) {
 
         if (words.size() == 1 && words[0] == "server:")
         {
-            //std::cout << "#######################################################" << std::endl;
-            //std::cout << "the spaces count is : " << spacesCount << std::endl;
+            ////std::cout << "#######################################################" << std::endl;
+            ////std::cout << "the spaces count is : " << spacesCount << std::endl;
             if (spacesCount != 0)
             {
                 if (newServer)
@@ -387,7 +387,7 @@ void confugParser::Parser(const std::string &PathToConfig) {
                 this->fileData.push_back(newServer);
             }
             newServer = new Server();
-            //std::cout << "#######################################################" << std::endl;
+            ////std::cout << "#######################################################" << std::endl;
 
         }
         else if (words.size() == 1)
