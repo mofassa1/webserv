@@ -1,34 +1,40 @@
 #include "Client.hpp"
 
-void    Client::check_HOST(){
+void Client::check_HOST()
+{
     std::string host_value = httpRequest.GetHost();
-    if(host_value.empty())
+    if (host_value.empty())
         throw BAD_REQUEST;
     bool check = false;
 
-    for(int i = 0; i < servers.size(); i++){
-        if(servers[i]->GetHost() == host_value){
+    for (int i = 0; i < servers.size(); i++)
+    {
+        if (servers[i]->GetHost() == host_value)
+        {
             server_matched = servers[i];
             check = true;
             break;
         }
-        if(HOST_AND_PORT(servers[i]->GetHost(), LocationMatch.PORT) == host_value){
+        if (HOST_AND_PORT(servers[i]->GetHost(), LocationMatch.PORT) == host_value)
+        {
             server_matched = servers[i];
             check = true;
             break;
         }
-        if(servers[i]->GetServerName() == host_value){
+        if (servers[i]->GetServerName() == host_value)
+        {
             server_matched = servers[i];
             check = true;
             break;
         }
-        if(HOST_AND_PORT(servers[i]->GetServerName(), LocationMatch.PORT) == host_value){
+        if (HOST_AND_PORT(servers[i]->GetServerName(), LocationMatch.PORT) == host_value)
+        {
             server_matched = servers[i];
             check = true;
             break;
         }
     }
-    if(!check)
+    if (!check)
         server_matched = servers[0];
 }
 
@@ -59,14 +65,15 @@ void Client::LocationCheck()
     }
     if (!match_found)
     {
-        for(int i = 0; i < routes.size(); i++)
+        for (int i = 0; i < routes.size(); i++)
         {
-            if(server_matched->GetRoute()[i].GetPats()["path:"] == "/"){
+            if (server_matched->GetRoute()[i].GetPats()["path:"] == "/")
+            {
                 BestMatch = routes[i];
                 match_found = true;
             }
         }
-        if(!match_found)
+        if (!match_found)
             throw NOT_FOUND;
     }
     LocationMatch.methods = BestMatch.GetMethods();
@@ -83,7 +90,7 @@ void Client::LocationCheck()
         throw NOT_ALLOWED;
     LocationMatch.directory = BestMatch.GetPats()["directory:"];
     LocationMatch.autoindex = BestMatch.GetAutoIndex();
-    LocationMatch.index_file = BestMatch.GetPats()["index_file:"];
+    LocationMatch.index_files = BestMatch.getIndexFiles();
     LocationMatch.cgi = BestMatch.GetCGI();
     HttpRequest::print_map(LocationMatch.cgi);
     LocationMatch.Error_pages = server_matched->GetDefaultERRPages();
@@ -91,26 +98,32 @@ void Client::LocationCheck()
     LocationMatch.path = (LocationMatch.path == "/") ? "" : LocationMatch.path;
     if (httpRequest.getMethod() == "POST")
     {
-        // GET FINAL URL
         LocationMatch.upload_directory = BestMatch.GetPats()["upload_directory:"];
         if (LocationMatch.upload_directory.empty())
             throw NOT_FOUND;
+
+        LocationMatch.upload_directory = validateUploadDir(LocationMatch.upload_directory);
         std::string content_typee = httpRequest.GetHeaderContent("content-type");
-        if(content_typee.empty())
+        if (content_typee.empty())
         {
             content_typee = "application/octet-stream";
         }
-        if(content_typee == "" || content_typee == ""){
+        // IF CGI
+        std::string file_extension = getFileExtension(LocationMatch.path);
+        file_extension += ':';
+        if (isCGI(file_extension, LocationMatch.cgi))
             LocationMatch.is_cgi = true;
-            LocationMatch.content_type_cgi = content_typee;
-        }
-        std::string file_extension = getExtensionFromContentType(content_typee);
-        LocationMatch.upload_path = LocationMatch.directory + LocationMatch.path + "/" + LocationMatch.upload_directory + "/" + generateUniqueString() + file_extension;
-        //std::cout << "upload_path: " << LocationMatch.upload_path << std::endl;
-        LocationMatch.upload_file.open(LocationMatch.upload_path.c_str(), std::ios::out | std::ios::binary);
+        else
+        {
+            std::string file_extension = getExtensionFromContentType(content_typee);
 
-        // if (!LocationMatch.upload_file.is_open()) // GO BACK
-        //     throw NOT_FOUND;
+            LocationMatch.upload_path = LocationMatch.directory + LocationMatch.path + "/" +
+                                        (LocationMatch.upload_directory.empty() || LocationMatch.upload_directory.back() == '/' ? LocationMatch.upload_directory : LocationMatch.upload_directory + "/") +
+                                        generateUniqueString() + file_extension;
+            LocationMatch.upload_file.open(LocationMatch.upload_path.c_str(), std::ios::out | std::ios::binary);
+            if (!LocationMatch.upload_file.is_open()) // GO BACK
+                throw NOT_FOUND;
+        }
     }
 }
 
@@ -119,25 +132,25 @@ void Client::parse_request(int fd, size_t _Readed)
     switch (state)
     {
     case waiting:
-        //std::cout << GREEN << "[" << fd << "]" << " WAITING" << COLOR_RESET << std::endl;
+        std::cout << GREEN << "[" << fd << "]" << " WAITING" << COLOR_RESET << std::endl;
         if (!httpRequest.VALID_CRLN_CRLN(buffer))
             break;
-        //std::cout << MAGENTA << buffer << std::endl;
+        std::cout << MAGENTA << buffer << std::endl;
         state = request_start_line;
         httpRequest.storethebuffer(buffer);
         /* fall through */
     case request_start_line:
         httpRequest.start_line();
-        //std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID START LINE - - - - - - -" << COLOR_RESET << std::endl;
+        std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID START LINE - - - - - - -" << COLOR_RESET << std::endl;
         state = request_headers;
         /* fall through */
     case request_headers:
         httpRequest.headers();
         LocationCheck();
-        //std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID HEADERS - - - - - -" << COLOR_RESET << std::endl;
+        std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID HEADERS - - - - - -" << COLOR_RESET << std::endl;
         if (httpRequest.getMethod() == "POST" && httpRequest.validbody(buffer, server_matched->Getclient_body_size_limit()))
         {
-            //std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID BODY - - - - - - " << COLOR_RESET << std::endl;
+            std::cout << GREEN << "[" << fd << "]" << "- - - - - - VALID BODY - - - - - - " << COLOR_RESET << std::endl;
             state = request_body;
         }
         else
@@ -156,7 +169,6 @@ void Client::parse_request(int fd, size_t _Readed)
     }
 }
 
-
 Client::Client() : state(waiting), BytesReaded(0), match_found(false)
 {
     struct timeval tv;
@@ -164,7 +176,8 @@ Client::Client() : state(waiting), BytesReaded(0), match_found(false)
     lastTime = (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L);
 }
 
-Client::~Client(){
+Client::~Client()
+{
 }
 
 Client::Client(const Client &other)

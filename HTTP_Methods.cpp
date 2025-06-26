@@ -3,20 +3,18 @@
 
 ResponseInfos Client::POST()
 {
-    ResponseInfos response;
     std::string full_path = LocationMatch.directory + LocationMatch.path;
-
-    std::cout << MAGENTA << "FF THIIIIIIIIIIIS" << std::endl;
+    ResponseInfos response;
+    
     std::string file_extension = getFileExtension(full_path);
     file_extension += ':';
-    std::cout << "file_extension: " << file_extension << std::endl;
-    if (isCGI(file_extension, LocationMatch.cgi))
+
+    if (LocationMatch.is_cgi)
     {
-        std::cout << "THIS IS CGI IN POST" << std::endl;
         std::string path_cgi = LocationMatch.cgi[file_extension];
-        
         return executeCGI(path_cgi, full_path);
     }
+
     std::ostringstream ss;
     ss << "<html><body><h1>File uploaded successfully</h1>";
     ss << "<p>Saved to: " << LocationMatch.upload_path << "</p>";
@@ -133,9 +131,10 @@ ResponseInfos Client::DELETE()
 
 ResponseInfos Client::GET()
 {
+    if(!LocationMatch.redirect_path.empty())
+        return generateResponse(RESPONSE_REDIRECT, LocationMatch.redirect_path, 301, LocationMatch);
+        
     std::string full_path = LocationMatch.directory + LocationMatch.path;
-
-    std::cout << RED << "QuEEEEEEEEEEEERY" << httpRequest.getDecodedPath() << COLOR_RESET << std::endl;
 
     struct stat file_info;
     if (stat(full_path.c_str(), &file_info) != 0)
@@ -143,19 +142,26 @@ ResponseInfos Client::GET()
 
     if (S_ISDIR(file_info.st_mode))
     {
+        if(!LocationMatch.path.empty() && LocationMatch.path[LocationMatch.path.size() - 1] != '/'){
+            std::string new_path = LocationMatch.path += "/";
+            return generateResponse(RESPONSE_REDIRECT, new_path, 301, LocationMatch);
+        }
         if (access(full_path.c_str(), R_OK | X_OK) != 0)
             throw FORBIDDEN;
-        if (!LocationMatch.index_file.empty())
+        if (!LocationMatch.index_files.empty())
         {
-            std::string index_path = full_path + "/" + LocationMatch.index_file;
-
-            struct stat index_info;
-            if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
+            for (size_t i = 0; i < LocationMatch.index_files.size(); i++)
             {
-                if (access(index_path.c_str(), R_OK) == 0)
-                    return generateResponse(RESPONSE_FILE, index_path, OK, LocationMatch);
-                else
-                    throw FORBIDDEN;
+                std::string index_path = (full_path.back() == '/' ? full_path : full_path + "/") + LocationMatch.index_files[i];
+
+                struct stat index_info;
+                if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
+                {
+                    if (access(index_path.c_str(), R_OK) == 0)
+                        return generateResponse(RESPONSE_FILE, index_path, OK, LocationMatch);
+                    else
+                        throw FORBIDDEN;
+                }
             }
         }
         if (LocationMatch.autoindex)

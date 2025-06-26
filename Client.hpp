@@ -56,7 +56,7 @@ typedef struct S_LocationMatch {
     std::string HOST;
     int         PORT;
     std::vector<std::string> methods;
-    std::string index_file;
+    std::vector<std::string> index_files;
     std::string upload_directory;
     std::string upload_path;
     std::string redirect_path;
@@ -70,13 +70,13 @@ typedef struct S_LocationMatch {
 
     // Default constructor
     S_LocationMatch()
-        : path(""), directory(""), methods(), index_file(""),
+        : path(""), directory(""), methods(),
           upload_directory(""), cgi(), autoindex(false), is_query_match(false), is_cgi(false) {}
 
     // Custom constructor
     S_LocationMatch(std::string p, std::string d, std::vector<std::string> m,
                     std::string i, std::string u, bool a, bool q)
-        : path(p), directory(d), methods(m), index_file(i),
+        : path(p), directory(d), methods(m),
           upload_directory(u), cgi(), autoindex(a), is_query_match(q), is_cgi(false) {}
 
 } t_LocationMatch;
@@ -131,3 +131,4 @@ std::string generateUniqueString();
 std::string getFileExtension(const std::string &path);
 std::string getExtensionFromContentType(const std::string &contentType);
 bool isCGI(const std::string &fileExtension, const std::map<std::string, std::string> &cgiMap);
+std::string validateUploadDir(const std::string& path);

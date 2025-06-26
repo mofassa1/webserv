@@ -215,8 +215,6 @@ void HttpRequest::checkBodyCompletionOnEOF()
 
 void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesReaded, std::ofstream &upload_file, size_t EndofFile)
 { 
-    // if content lenght is 0 
-
     while(_Read_index_body < buffer.size()){
         if(body_received == content_length)
             break;
@@ -225,8 +223,6 @@ void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesRead
         _Read_index_body++;
         body_received++;
     }
-    if(body_received > content_length)
-        throw BAD_REQUEST;
     if (body_received == content_length)
         chunk_done = true;
 }
@@ -281,8 +277,6 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
             body += buffer[_Read_index_body];
             _Read_index_body += to_read;
             current_chunk_size -= to_read;
-
-            //std::cout << RED << "current_chunk_size: " << current_chunk_size << COLOR_RESET << std::endl; 
             if (current_chunk_size == 0)
             {
                 reading_chunk_data = false;
@@ -314,14 +308,10 @@ void HttpRequest::TransferEncoding(const std::string &buffer, size_t totalbytesR
 
 void HttpRequest::parsebody(const std::string &buffer, size_t bytesReaded, size_t totalbytesReaded, std::ofstream &upload_file)
 {
-    //std::cout << GREEN << "_Read_index_body: " << _Read_index_body << " && buffer.size(): " << buffer.size() << " && totalbytesReaded: " << totalbytesReaded << COLOR_RESET << std::endl;
     if (hasContentLength)
         contentLength(buffer, totalbytesReaded, upload_file, bytesReaded);
     if (hasTransferEncoding)
         TransferEncoding(buffer, totalbytesReaded, upload_file);
-    //std::cout << std::endl;
-    //std::cout << RED << "_Read_index_body: " << _Read_index_body << std::endl;
-    ////std::cout << "$" << MAGENTA << buffer << "$" << std::endl;
 }
 
 void HttpRequest::parseRequestUri(const std::string &Uri)
@@ -399,7 +389,6 @@ std::string HttpRequest::GetHost() {
     return "";
 }
 
-
 std::string HttpRequest::GetHeaderContent(std::string HEADER)
 {
     std::map<std::string, std::string>::const_iterator it = mheaders.find(HEADER);
@@ -415,10 +404,10 @@ std::string HttpRequest::GetBody() const{
 
 void HttpRequest::print_vector(std::vector<std::string> &vec)
 {
-    //std::cout << YELLOW;
+    std::cout << YELLOW;
     for (size_t i = 0; i < vec.size(); i++)
     {
-        //std::cout << vec[i];
+        std::cout << vec[i];
     }
-    //std::cout << COLOR_RESET;
+    std::cout << COLOR_RESET;
 }

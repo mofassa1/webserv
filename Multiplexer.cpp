@@ -134,15 +134,16 @@ void Multiplexer::run(confugParser &config)
             int fd = allClients[i];
             std::map<int, Client>::iterator it = client.find(fd);
 
-            if (it == client.end())
-            {
-                client[fd] = Client();
-            }
+            // if (it == client.end())
+            // {
+            //     client[fd] = Client();
+            // }
             
             double currenTime = get_time_ms();
             
             if (get_time_ms() - client[fd].lastTime > TIMEOUT_MS) // ????????????????????????
             {
+                std::cerr << "HNA AZBI" << std::endl;
                 client[fd].Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT, client[fd].LocationMatch);
                 handelResponse(client[fd], fd, config);
 

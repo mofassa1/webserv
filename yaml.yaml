@@ -17,7 +17,7 @@ server:
     auto_index: on
     path: /uploads
     directory: ./www/scripts
-    methods: GET POST
+    methods: GET POST DELETE
     index_file: welcome.html
     upload_directory: ./
     cgi:
@@ -39,6 +39,7 @@ server:
     directory: ./www/scripts
     methods: GET POST DELETE
     index_file: script.py
+    upload_directory: ./hamouda
     cgi:
       .php: /usr/bin/php-cgi
       .py:  /usr/bin/python3

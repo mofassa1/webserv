@@ -183,3 +183,9 @@ bool isCGI(const std::string &fileExtension, const std::map<std::string, std::st
 
     return cgiMap.find(fileExtension) != cgiMap.end();
 }
+
+std::string validateUploadDir(const std::string& path) {
+    if (path.find("..") != std::string::npos)
+        throw BAD_REQUEST;
+    return (path == "./") ? "" : path;
+}
