@@ -28,5 +28,4 @@ build:
 	make re
 	make clean
 	clear
-
 .SECONDARY: $(OBJ)
