@@ -37,11 +37,23 @@ void Multiplexer::HandleRequest(int eventFd, const std::string& buffer, size_t b
     catch (std::exception &e)
     {
         //std::cout << RED << "- - - - - Error in handle_request: " << e.what() << COLOR_RESET << std::endl;
-        close(eventFd);
+        
         epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
         config.removeClient(eventFd);
         clientOfServer.erase(eventFd);
         client.erase(eventFd);
+        bool removed = false;
+        for (size_t index = 0; index < allClients.size(); index++)
+        {
+            if (allClients[index] == eventFd)
+            {
+                removed = true;
+                
+                allClients.erase(allClients.begin() + index);
+                break;
+            }
+        }
+        close(eventFd);
         //std::cout << "[" << eventFd << "]" << "- - - - - - - - CLOSED - - - - - -" << std::endl;
     }
 }

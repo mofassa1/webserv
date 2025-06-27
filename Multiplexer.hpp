@@ -27,8 +27,7 @@ class Multiplexer
         std::map<int, std::string> soketOfHost;
         std::map<int, int> soketOfPort;
         std::map<int, std::vector<Server*>> clientOfServer;
-        std::vector<int> allClients; 
-        std::map<int, double> pendingClients;
+        std::vector<int> allClients;
 
     public:
         Multiplexer(/* args */);
@@ -39,9 +38,9 @@ class Multiplexer
         bool    isServerSocket(int fd);
         void    HandleRequest(int eventFd, const std::string& buffer, size_t bytesReaded, confugParser &config);
         void    handelResponse(Client& client, int eventfd, confugParser &confug);
+        void timeoutCheker(confugParser &config);
         /// //// signal handeler /////////
 
         std::vector <int> fileDiscriptors;
         int EpoleFd;
 };
-
