@@ -34,11 +34,12 @@ class Multiplexer
         ~Multiplexer();
         void    startMultiplexing(confugParser& config);
         void    run(confugParser& config);
-        int     NewClient(int eventFd);
+        void     NewClient(confugParser &config, int eventFd);
         bool    isServerSocket(int fd);
         void    HandleRequest(int eventFd, const std::string& buffer, size_t bytesReaded, confugParser &config);
         void    handelResponse(Client& client, int eventfd, confugParser &confug);
         void timeoutCheker(confugParser &config);
+        void removeClient(confugParser &config, int eventFd);
         /// //// signal handeler /////////
 
         std::vector <int> fileDiscriptors;

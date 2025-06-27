@@ -100,20 +100,32 @@ long get_time_ms()
     return (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L);
 }
 
-int Multiplexer::NewClient(int eventFd)
+void Multiplexer::NewClient(confugParser &config, int eventFd)
 {
 
     int clientFd = accept(eventFd, NULL, NULL);
     if (clientFd == -1)
-    {
-        return -1;
-    }
+        return ;
     struct epoll_event event;
     event.events = EPOLLIN;
     event.data.fd = clientFd;
     epoll_ctl(this->EpoleFd, EPOLL_CTL_ADD, clientFd, &event);
     allClients.push_back(clientFd);
-    return clientFd;
+
+    if (clientFd != -1)
+    {
+        config.newClient(clientFd, eventFd);
+        soketOfPort[clientFd] = soketOfPort[eventFd];
+        size_t count = config.GetAllData().size();
+        for (size_t i = 0; i < count; i++)
+        {
+            if (config.GetAllData()[i]->isTheSeverSocket(eventFd))
+            {
+                clientOfServer[clientFd].push_back(config.GetAllData()[i]);
+            }
+        }
+    }
+
 }
 
 void Multiplexer::timeoutCheker(confugParser &config)
@@ -148,6 +160,26 @@ void Multiplexer::timeoutCheker(confugParser &config)
         ++i;
     }
 }
+
+
+void Multiplexer::removeClient(confugParser &config, int eventFd)
+{
+    std::map<int, Client>::iterator iter = client.find(eventFd);
+    client.erase(iter);
+    epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
+    config.removeClient(eventFd);
+    clientOfServer.erase(eventFd);
+    for (size_t index = 0; index < allClients.size(); index++)
+    {
+        if (allClients[index] == eventFd)
+        {
+            allClients.erase(allClients.begin() + index);
+            break;
+        }
+    }
+    close(eventFd);
+}
+
 void Multiplexer::run(confugParser &config)
 {
     while (true)
@@ -166,20 +198,7 @@ void Multiplexer::run(confugParser &config)
 
             if (isServerSocket(eventFd))
             {
-                int clientSocket = NewClient(eventFd);
-                if (clientSocket != -1)
-                {
-                    config.newClient(clientSocket, eventFd);
-                    soketOfPort[clientSocket] = soketOfPort[eventFd];
-                    size_t count = config.GetAllData().size();
-                    for (size_t i = 0; i < count; i++)
-                    {
-                        if (config.GetAllData()[i]->isTheSeverSocket(eventFd))
-                        {
-                            clientOfServer[clientSocket].push_back(config.GetAllData()[i]);
-                        }
-                    }
-                }
+                NewClient(config, eventFd);
             }
             else if (events[i].events & EPOLLIN)
             {
@@ -189,20 +208,7 @@ void Multiplexer::run(confugParser &config)
 
                 if (bytesReaded <= 0)
                 {
-                    std::map<int, Client>::iterator iter = client.find(eventFd);
-                    client.erase(iter);
-                    epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
-                    config.removeClient(eventFd);
-                    clientOfServer.erase(eventFd);
-                    for (size_t index = 0; index < allClients.size(); index++)
-                    {
-                        if (allClients[index] == eventFd)
-                        {
-                            allClients.erase(allClients.begin() + index);
-                            break;
-                        }
-                    }
-                    close(eventFd);
+                    removeClient(config, eventFd);
                 }
                 else
                     HandleRequest(eventFd, std::string(buffer, bytesReaded) , bytesReaded, config);
@@ -211,21 +217,7 @@ void Multiplexer::run(confugParser &config)
             {
                 client[eventFd].lastTime = get_time_ms();
                 handelResponse(client[eventFd], eventFd, config);
-                std::map<int, Client>::iterator iter = client.find(eventFd);
-                client.erase(iter);
-                epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
-                config.removeClient(eventFd);
-                clientOfServer.erase(eventFd);
-                
-                for (size_t index = 0; index < allClients.size(); index++)
-                {
-                    if (allClients[index] == eventFd)
-                    {
-                        allClients.erase(allClients.begin() + index);
-                        break;
-                    }
-                }
-                close(eventFd);
+                removeClient(config, eventFd);
             }
         }
     }
