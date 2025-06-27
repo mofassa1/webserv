@@ -8,9 +8,6 @@ bool Multiplexer::isServerSocket(int fd)
 
 int Multiplexer::create_server_socket(unsigned short currentPort, std::string host)
 {
-
-    //// I need first to check is already have a server with the same host , Port ///////
-
     static std::vector<std::pair<unsigned short, std::string>> binded;
     static std::map<std::pair<unsigned short, std::string>, int> socketServer;
 
@@ -70,7 +67,6 @@ void Multiplexer::startMultiplexing(confugParser &config)
     {
 
         std::vector<unsigned short> Ports = config.GetAllData()[i]->GetPorts();
-        // std::vector<int> ServerSocket = config.GetAllData()[i]->GetServerSockets();
         std::string host = config.GetAllData()[i]->GetHost();
         size_t portsCount = Ports.size();
         for (size_t j = 0; j < portsCount; j++)
@@ -95,7 +91,6 @@ void Multiplexer::startMultiplexing(confugParser &config)
         }
     }
 
-    ///////
     this->run(config);
 }
 long get_time_ms()
@@ -111,7 +106,6 @@ int Multiplexer::NewClient(int eventFd)
     int clientFd = accept(eventFd, NULL, NULL);
     if (clientFd == -1)
     {
-        ////std::cout << "accept failed" << std::endl;
         return -1;
     }
     struct epoll_event event;
@@ -129,17 +123,15 @@ void Multiplexer::timeoutCheker(confugParser &config)
         int fd = allClients[i];
         std::map<int, Client>::iterator it = client.find(fd);
 
-        if (get_time_ms() - client[fd].lastTime > TIMEOUT_MS) // ????????????????????????
+        if (get_time_ms() - client[fd].lastTime > TIMEOUT_MS)
         {
             Client curentClient;
             if (it != client.end())
                 curentClient  = client[fd];
-            // else
-            //     curentClient = Client();
+
             curentClient.Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT, curentClient.LocationMatch);
             handelResponse(curentClient, fd, config);
 
-            // Remove client from map and list
             close(fd);
 
             if (it != client.end()){
@@ -150,10 +142,10 @@ void Multiplexer::timeoutCheker(confugParser &config)
             
             allClients.erase(allClients.begin() + i);
             epoll_ctl(EpoleFd, EPOLL_CTL_DEL, fd, NULL);
-            continue; // Don't increment i, list shifted left
+            continue; 
         }
 
-        ++i; // Only increment if no erase happened
+        ++i;
     }
 }
 void Multiplexer::run(confugParser &config)
@@ -166,14 +158,12 @@ void Multiplexer::run(confugParser &config)
         timeoutCheker(config);
         if (eventCount == -1 || eventCount == 0)
         {
-            ////std::cout << "epoll_wait failed" << std::endl;
             continue;
         }
         for (int i = 0; i < eventCount; i++)
         {
             int eventFd = events[i].data.fd;
 
-            // If it is a server socket we need to accept new client
             if (isServerSocket(eventFd))
             {
                 int clientSocket = NewClient(eventFd);
@@ -191,7 +181,6 @@ void Multiplexer::run(confugParser &config)
                     }
                 }
             }
-            // Check if the event is for reading
             else if (events[i].events & EPOLLIN)
             {
                 client[eventFd].lastTime = get_time_ms();
@@ -218,12 +207,10 @@ void Multiplexer::run(confugParser &config)
                 else
                     HandleRequest(eventFd, std::string(buffer, bytesReaded) , bytesReaded, config);
             }
-            // Check if the event is for writting
             else if (events[i].events & EPOLLOUT)
             {
                 client[eventFd].lastTime = get_time_ms();
                 handelResponse(client[eventFd], eventFd, config);
-                
                 std::map<int, Client>::iterator iter = client.find(eventFd);
                 client.erase(iter);
                 epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
@@ -239,7 +226,6 @@ void Multiplexer::run(confugParser &config)
                     }
                 }
                 close(eventFd);
-                ////std::cout << "[" << eventFd << "]" << "- - - - - - - - CLOSED - - - - - -" << std::endl;
             }
         }
     }
