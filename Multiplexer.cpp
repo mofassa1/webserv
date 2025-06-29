@@ -134,18 +134,34 @@ void Multiplexer::timeoutCheker(confugParser &config)
         int fd = allClients[i];
         std::map<int, Client>::iterator it = client.find(fd);
 
-        if (get_time_ms() - client[fd].lastTime > TIMEOUT_MS)
+        if (client[fd].cgiInfos.isRunning == true)
         {
-
-            if (client[fd].cgiInfos.isRunning == true)
+            int status;
+            if (waitpid(client[fd].cgiInfos.childPid, &status, WNOHANG) == 0)
             {
-                std::cout << GREEN << "[" << fd << "] - CGI script timed out, killing process." << COLOR_RESET << std::endl;
-                client[fd].cgiInfos.isRunning = false;
-                std::cout << GREEN << client[fd].cgiInfos.isRunning << COLOR_RESET << std::endl;
-                std::cout << RED << "[" << fd << "] - Killing child process with PID: " << client[fd].cgiInfos.childPid << COLOR_RESET << std::endl;
-                kill(client[fd].cgiInfos.childPid, SIGKILL);
-                waitpid(client[fd].cgiInfos.childPid, 0, WNOHANG);
-                client[fd].Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT, client[fd].LocationMatch);
+                if (get_time_ms() - client[fd].lastTime > TIMEOUT_MS)
+                {
+                    std::cout << GREEN << "[" << fd << "] - CGI script timed out, killing process." << COLOR_RESET << std::endl;
+                    client[fd].cgiInfos.isRunning = false;
+                    std::cout << GREEN << client[fd].cgiInfos.isRunning << COLOR_RESET << std::endl;
+                    std::cout << RED << "[" << fd << "] - Killing child process with PID: " << client[fd].cgiInfos.childPid << COLOR_RESET << std::endl;
+                    kill(client[fd].cgiInfos.childPid, SIGKILL);
+                    client[fd].Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT, client[fd].LocationMatch);
+                    handelResponse(client[fd], fd, config);
+                    close(fd);
+                    if (it != client.end())
+                    {
+                        client.erase(it);
+                    }
+                    config.removeClient(fd);
+                    clientOfServer.erase(fd);
+                    allClients.erase(allClients.begin() + i);
+                    epoll_ctl(EpoleFd, EPOLL_CTL_DEL, fd, NULL);
+                    continue;
+                }
+            }
+            else{
+                client[fd].CGI_RESPONSE();
                 handelResponse(client[fd], fd, config);
                 close(fd);
                 if (it != client.end())
@@ -158,6 +174,9 @@ void Multiplexer::timeoutCheker(confugParser &config)
                 epoll_ctl(EpoleFd, EPOLL_CTL_DEL, fd, NULL);
                 continue;
             }
+        }
+        if (get_time_ms() - client[fd].lastTime > TIMEOUT_MS)
+        {
             Client curentClient;
             if (it != client.end())
                 curentClient = client[fd];

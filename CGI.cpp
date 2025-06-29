@@ -87,6 +87,7 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
     if (cgiInfos.childPid == 0)
     {
         freopen(cgiInfos.outputFileName.c_str(), "w", stdout);
+        freopen(cgiInfos.outputFileName.c_str(), "w", stderr); 
         if (httpRequest.getMethod() == "POST")
             freopen(cgiInfos.inputFileName.c_str(), "r", stdin);
         else
@@ -136,7 +137,6 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
     }
     else
     {
-        cgiInfos.startTime = time(NULL);
         if (httpRequest.getMethod() == "POST" && !httpRequest.GetBody().empty())
         {
             const std::string &body = httpRequest.GetBody();
@@ -152,6 +152,7 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
             inputFile.write(body.c_str(), body.length());
             inputFile.close();
         }
+        cgiInfos.startTime = time(NULL);
     }
     return generateResponse(RESPONSE_CGI_CHECK, "", 1337, LocationMatch);
 }
@@ -216,6 +217,7 @@ bool Client::CGI_RESPONSE()
     std::ostringstream contentLengthStream;
     contentLengthStream << Response.body.size();
     Response.headers["Content-Length"] = contentLengthStream.str();
+    cgiInfos.isRunning = false;
     return true;
 }
 

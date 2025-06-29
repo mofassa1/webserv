@@ -131,10 +131,8 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
 
 bool Multiplexer::handelResponse(Client &client, int eventfd, confugParser &config)
 {
-    if(client.Response.status == 1337){
-        // if(!client.CGI_RESPONSE())
+    if(client.Response.status == 1337)
             return false;    
-    }
     int fd = eventfd;
     const ResponseInfos &response = client.Response;
     std::ostringstream fullResponse;
