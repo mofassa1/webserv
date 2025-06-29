@@ -77,8 +77,8 @@ bool parseCGIHeaders(const std::string &cgi_output, std::map<std::string, std::s
 
 ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &scriptPath)
 {
-    std::string outputFileName = "/tmp/cgi_output_" + generateUniqueString() + ".txt";
-    std::string inputFileName = "/tmp/cgi_input_" + generateUniqueString() + ".txt";
+    cgiInfos.outputFileName = "/tmp/cgi_output_" + generateUniqueString() + ".txt";
+    cgiInfos.inputFileName = "/tmp/cgi_input_" + generateUniqueString() + ".txt";
 
     cgiInfos.childPid = fork();
     if (cgiInfos.childPid == -1)
@@ -86,9 +86,9 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
 
     if (cgiInfos.childPid == 0)
     {
-        freopen(outputFileName.c_str(), "w", stdout);
+        freopen(cgiInfos.outputFileName.c_str(), "w", stdout);
         if (httpRequest.getMethod() == "POST")
-            freopen(inputFileName.c_str(), "r", stdin);
+            freopen(cgiInfos.inputFileName.c_str(), "r", stdin);
         else
             freopen("/dev/null", "r", stdin);
 
@@ -140,13 +140,13 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
         if (httpRequest.getMethod() == "POST" && !httpRequest.GetBody().empty())
         {
             const std::string &body = httpRequest.GetBody();
-            std::ofstream inputFile(inputFileName.c_str(), std::ios::out | std::ios::trunc);
+            std::ofstream inputFile(cgiInfos.inputFileName.c_str(), std::ios::out | std::ios::trunc);
             if (!inputFile.is_open())
             {
                 std::cerr << "Failed to open input file for CGI script" << std::endl;
                 kill(cgiInfos.childPid, SIGKILL);
-                std::remove(outputFileName.c_str());
-                std::remove(inputFileName.c_str());
+                std::remove(cgiInfos.outputFileName.c_str());
+                std::remove(cgiInfos.inputFileName.c_str());
                 throw INTERNAL;
             }
             inputFile.write(body.c_str(), body.length());
@@ -154,6 +154,69 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
         }
     }
     return generateResponse(RESPONSE_CGI_CHECK, "", 1337, LocationMatch);
+}
+
+bool Client::CGI_RESPONSE()
+{
+    std::ifstream outputFile(cgiInfos.outputFileName.c_str());
+    if (!outputFile.is_open())
+    {
+        std::remove(cgiInfos.outputFileName.c_str());
+        std::remove(cgiInfos.inputFileName.c_str());
+        Response = generateResponse(RESPONSE_ERROR, "", INTERNAL, LocationMatch);
+        return true;
+    }
+
+    std::ostringstream outputBuffer;
+    outputBuffer << outputFile.rdbuf();
+    outputFile.close();
+
+    std::remove(cgiInfos.outputFileName.c_str());
+    std::remove(cgiInfos.inputFileName.c_str());
+
+    std::string cgiOutput = outputBuffer.str();
+    std::map<std::string, std::string> cgi_headers;
+    std::string cgi_body;
+
+    bool headerParseSuccess = parseCGIHeaders(cgiOutput, cgi_headers, cgi_body);
+
+    if (!headerParseSuccess)
+    {
+        std::cerr << RED << "[CGI ERROR] Failed to parse CGI headers" << COLOR_RESET << std::endl;
+
+        Response.status = 502;
+        Response.contentType = "text/html";
+        Response.body = "<h1>502 Bad Gateway</h1><p>CGI script returned invalid headers.</p>";
+
+        std::ostringstream contentLengthStream;
+        contentLengthStream << Response.body.size();
+        Response.headers["Content-Length"] = contentLengthStream.str();
+        Response.headers["Content-Type"] = Response.contentType;
+        return true;
+    }
+
+    Response.status = OK;
+    if (cgi_headers.find("Status") != cgi_headers.end())
+    {
+        std::istringstream statusStream(cgi_headers["Status"]);
+        statusStream >> Response.status;
+    }
+
+    Response.body = cgi_body;
+    Response.headers = cgi_headers;
+
+    if (cgi_headers.find("Content-Type") != cgi_headers.end())
+        Response.contentType = cgi_headers["Content-Type"];
+    else
+    {
+        Response.contentType = "text/html";
+        Response.headers["Content-Type"] = Response.contentType;
+    }
+
+    std::ostringstream contentLengthStream;
+    contentLengthStream << Response.body.size();
+    Response.headers["Content-Length"] = contentLengthStream.str();
+    return true;
 }
 
 /*

@@ -16,7 +16,7 @@ void Multiplexer::HandleRequest(int eventFd, const std::string& buffer, size_t b
         c.parse_request(eventFd, bytesReaded);
         if (c.state == done)
         {
-            //std::cout << GREEN << "[" << eventFd << "]" << "- - - - - - DONE - - - - - -" << COLOR_RESET << std::endl;
+            std::cout << GREEN << "[" << eventFd << "]" << "- - - - - - DONE - - - - - -" << COLOR_RESET << std::endl;
             if (c.httpRequest.getMethod() == "GET")
                 c.Response = c.GET();
             if (c.httpRequest.getMethod() == "POST")

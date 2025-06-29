@@ -112,6 +112,7 @@ class Client
         // ResponseInfos executeCGIForPOST(const std::string &cgiPath, const std::string &scriptPath);
 
         ResponseInfos executeCGI(const std::string &cgiPath, const std::string &scriptPath);
+        bool CGI_RESPONSE();
 
         void    parse_request(int fd, size_t bytesReaded);
         void    check_HOST();

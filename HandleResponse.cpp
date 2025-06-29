@@ -131,14 +131,14 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
 
 bool Multiplexer::handelResponse(Client &client, int eventfd, confugParser &config)
 {
+    if(client.Response.status == 1337){
+        // if(!client.CGI_RESPONSE())
+            return false;    
+    }
     int fd = eventfd;
     const ResponseInfos &response = client.Response;
     std::ostringstream fullResponse;
 
-    if(response.status == 1337){
-        std::cout << RED << "[" << fd << "] - CGI script is still running, skipping response." << COLOR_RESET << std::endl;
-        return false;    
-    }
     // Status line
     
     fullResponse << "HTTP/1.1 " << response.status << " "
