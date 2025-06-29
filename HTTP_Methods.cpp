@@ -6,14 +6,13 @@ ResponseInfos Client::POST()
     std::string full_path = LocationMatch.directory + LocationMatch.path;
     ResponseInfos response;
     
-    std::string file_extension = getFileExtension(full_path);
-    file_extension += ':';
-
-    if (LocationMatch.is_cgi)
-    {
-        std::string path_cgi = LocationMatch.cgi[file_extension];
-        return executeCGI(path_cgi, full_path);
-    }
+    // std::string file_extension = getFileExtension(full_path);
+    // file_extension += ':';
+    // if (isCGI(file_extension, LocationMatch.cgi))
+    // {
+    //     std::string path_cgi = LocationMatch.cgi[file_extension];
+    //     return executeCGI(path_cgi, full_path);
+    // }
 
     std::ostringstream ss;
     ss << "<html><body><h1>File uploaded successfully</h1>";
@@ -180,7 +179,11 @@ ResponseInfos Client::GET()
         if (isCGI(file_extension, LocationMatch.cgi))
         {
             std::string path_cgi = LocationMatch.cgi[file_extension];
-            return executeCGI(path_cgi, full_path);
+            if(!cgiInfos.isRunning){
+                std::cout << GREEN << "[GET] Executing CGI script: " << path_cgi << " for file: " << full_path << COLOR_RESET << std::endl;
+                cgiInfos.isRunning = true;
+                return executeCGI(path_cgi, full_path);
+            }
         }
         return generateResponse(RESPONSE_FILE, full_path, OK, LocationMatch);
     }

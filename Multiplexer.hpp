@@ -17,6 +17,7 @@
 
 #define BUFFERSIZE 1000
 
+#define CGI_TIMEOUT_MS 5000
 #define TIMEOUT_MS 10000
 
 class Multiplexer
@@ -37,7 +38,7 @@ class Multiplexer
         void     NewClient(confugParser &config, int eventFd);
         bool    isServerSocket(int fd);
         void    HandleRequest(int eventFd, const std::string& buffer, size_t bytesReaded, confugParser &config);
-        void    handelResponse(Client& client, int eventfd, confugParser &confug);
+        bool    handelResponse(Client& client, int eventfd, confugParser &confug);
         void timeoutCheker(confugParser &config);
         void removeClient(confugParser &config, int eventFd);
         /// //// signal handeler /////////

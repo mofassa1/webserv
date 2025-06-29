@@ -31,7 +31,7 @@ enum ResponseType {
     RESPONSE_REDIRECT,
     RESPONSE_DIRECTORY_LISTING,
     RESPONSE_DELETE,
-    RESPONSE_CGI
+    RESPONSE_CGI_CHECK
 };
 
 struct ResponseInfos {
@@ -50,6 +50,15 @@ enum Client_state{
     done
 };
 
+typedef struct CGIInfos {
+    time_t startTime;
+    pid_t childPid;
+    std::string inputFileName;
+    std::string outputFileName;
+    bool isRunning;
+    CGIInfos(): startTime(0), childPid(0), inputFileName(""), outputFileName(""), isRunning(false) {}
+}t_CGIInfos;
+
 typedef struct S_LocationMatch {
     std::string path;
     std::string directory;
@@ -67,6 +76,7 @@ typedef struct S_LocationMatch {
     std::map<unsigned short, std::string>  Error_pages;
     bool autoindex;
     bool is_query_match;
+    
 
     // Default constructor
     S_LocationMatch()
@@ -97,6 +107,7 @@ class Client
         bool       match_found;
         S_LocationMatch LocationMatch;
         ResponseInfos Response;
+        t_CGIInfos cgiInfos;
 
         // ResponseInfos executeCGIForPOST(const std::string &cgiPath, const std::string &scriptPath);
 
