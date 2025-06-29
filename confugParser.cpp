@@ -200,7 +200,7 @@ std::string confugParser::parseRoute(std::string line1, Server *newServer, std::
         }
         else if (spacesCount == 4 && (words[0] ==  "path:" || 
                 words[0] ==  "directory:"  
-                || words[0] == "upload_directory:"))
+                || words[0] == "upload_directory:" || words[0] == "redirect:"))
         {
             if ((words.size() > 2 && words[2][0] != '#') || words.size() == 1)
                 std::runtime_error("error : the key word must be followed by one arguiment");

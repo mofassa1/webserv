@@ -95,6 +95,7 @@ void Client::LocationCheck()
     HttpRequest::print_map(LocationMatch.cgi);
     LocationMatch.Error_pages = server_matched->GetDefaultERRPages();
     LocationMatch.redirect_path = BestMatch.GetPats()["redirect:"];
+    std::cout << GREEN << "--------------------------redirect: " << BestMatch.GetPats()["redirect:"] << std::endl;
     LocationMatch.path = (LocationMatch.path == "/") ? "" : LocationMatch.path;
     if (httpRequest.getMethod() == "POST")
     {

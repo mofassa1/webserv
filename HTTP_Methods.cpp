@@ -130,8 +130,10 @@ ResponseInfos Client::DELETE()
 
 ResponseInfos Client::GET()
 {
-    if(!LocationMatch.redirect_path.empty())
+    if(!LocationMatch.redirect_path.empty()){
+        std::cout << "redirect path: " << LocationMatch.redirect_path << std::endl;
         return generateResponse(RESPONSE_REDIRECT, LocationMatch.redirect_path, 301, LocationMatch);
+    }
         
     std::string full_path = LocationMatch.directory + LocationMatch.path;
 
