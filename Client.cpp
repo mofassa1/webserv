@@ -5,6 +5,8 @@ void Client::check_HOST()
     std::string host_value = httpRequest.GetHost();
     if (host_value.empty())
         throw BAD_REQUEST;
+    if(countWords(host_value) > 1)
+        throw BAD_REQUEST;
     bool check = false;
 
     for (int i = 0; i < servers.size(); i++)
@@ -95,7 +97,6 @@ void Client::LocationCheck()
     HttpRequest::print_map(LocationMatch.cgi);
     LocationMatch.Error_pages = server_matched->GetDefaultERRPages();
     LocationMatch.redirect_path = BestMatch.GetPats()["redirect:"];
-    std::cout << GREEN << "--------------------------redirect: " << BestMatch.GetPats()["redirect:"] << std::endl;
     LocationMatch.path = (LocationMatch.path == "/") ? "" : LocationMatch.path;
     if (httpRequest.getMethod() == "POST")
     {

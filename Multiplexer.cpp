@@ -146,7 +146,7 @@ void Multiplexer::timeoutCheker(confugParser &config)
                     std::cout << GREEN << client[fd].cgiInfos.isRunning << COLOR_RESET << std::endl;
                     std::cout << RED << "[" << fd << "] - Killing child process with PID: " << client[fd].cgiInfos.childPid << COLOR_RESET << std::endl;
                     kill(client[fd].cgiInfos.childPid, SIGKILL);
-                    client[fd].Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT, client[fd].LocationMatch);
+                    client[fd].Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT_504, client[fd].LocationMatch);
                     handelResponse(client[fd], fd, config);
                     close(fd);
                     if (it != client.end())

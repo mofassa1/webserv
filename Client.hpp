@@ -144,3 +144,4 @@ std::string getFileExtension(const std::string &path);
 std::string getExtensionFromContentType(const std::string &contentType);
 bool isCGI(const std::string &fileExtension, const std::map<std::string, std::string> &cgiMap);
 std::string validateUploadDir(const std::string& path);
+int countWords(const std::string& input);

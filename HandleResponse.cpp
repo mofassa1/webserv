@@ -214,6 +214,8 @@ std::string Client::getStatusMessage(int statusCode)
         return "Bad Gateway";
     case 503:
         return "Service Unavailable";
+    case 504:
+        return "Gateway Timeout";
 
     default:
         return "Unknown Status";

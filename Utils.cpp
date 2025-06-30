@@ -189,3 +189,14 @@ std::string validateUploadDir(const std::string& path) {
         throw BAD_REQUEST;
     return (path == "./") ? "" : path;
 }
+
+int countWords(const std::string& input) {
+    std::istringstream stream(input);
+    std::string word;
+    int count = 0;
+
+    while (stream >> word)
+        ++count;
+
+    return count;
+}

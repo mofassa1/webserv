@@ -35,6 +35,7 @@
 #define LENGTH_REQUIRED 411
 #define NO_CONTENT 204
 #define ACCEPTED 202
+#define TIMEOUT_504 504
 
 
 typedef struct s_start_line
