@@ -100,7 +100,8 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         {
             if (std::string(entry->d_name) == "." || std::string(entry->d_name) == "..")
                 continue;
-            dirContent << "<li><a href=\"" << LocationMatch.path + "/" + entry->d_name << "\">" << entry->d_name << "</a></li>";
+            std::string to_path = LocationMatch.path[LocationMatch.path.size() - 1] == '/' ? LocationMatch.path : LocationMatch.path + "/";
+            dirContent << "<li><a href=\"" << to_path + entry->d_name << "\">" << entry->d_name << "</a></li>";
         }
         dirContent << "</ul></body></html>";
         closedir(dir);
