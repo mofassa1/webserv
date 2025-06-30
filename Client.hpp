@@ -77,13 +77,10 @@ typedef struct S_LocationMatch {
     bool autoindex;
     bool is_query_match;
     
-
-    // Default constructor
     S_LocationMatch()
         : path(""), directory(""), methods(),
           upload_directory(""), cgi(), autoindex(false), is_query_match(false), is_cgi(false) {}
 
-    // Custom constructor
     S_LocationMatch(std::string p, std::string d, std::vector<std::string> m,
                     std::string i, std::string u, bool a, bool q)
         : path(p), directory(d), methods(m),
@@ -109,8 +106,6 @@ class Client
         ResponseInfos Response;
         t_CGIInfos cgiInfos;
 
-        // ResponseInfos executeCGIForPOST(const std::string &cgiPath, const std::string &scriptPath);
-
         ResponseInfos executeCGI(const std::string &cgiPath, const std::string &scriptPath);
         bool CGI_RESPONSE();
 
@@ -126,7 +121,6 @@ class Client
         
         Client(const Client& other);
         
-        // Copy assignment operator
         Client& operator=(const Client& other);
         
         ResponseInfos   deleteDir(const std::string& path);

@@ -2,7 +2,6 @@
 #include "route.hpp"
 #define MaxSize 500
 
-////// start of server class ////////////////////////////
 
 class Server
 {
@@ -40,7 +39,7 @@ class Server
         ///////////// sokets ////////////
         std::vector<int> GetServerSockets();
         const std::vector <int> getClientSockets() const;
-        // std::vector <int> 
+ 
         //// extra methods ///////////////
 
         bool isTheSeverClient(int socket) const;

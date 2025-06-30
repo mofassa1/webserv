@@ -81,11 +81,10 @@ public:
     static void split_header(const std::string &buffer, std::vector<std::string> &words);
     static void split_line(const std::string &buffer, std::vector<std::string> &words);
 
-    // print
+
     static void print_vector(std::vector<std::string> &vec);
     static void print_map(const std::map<std::string, std::string> &m);
 
-    // Getters
     std::string getMethod() const;
     std::string getDecodedPath() const;
     std::string getVersion() const;
@@ -102,7 +101,6 @@ public:
     size_t content_length;
     size_t body_received;
 
-    // For chunked decoding
     std::string chunk_size_line;
     size_t current_chunk_size;
     bool reading_chunk_size;

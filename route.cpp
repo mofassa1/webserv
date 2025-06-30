@@ -1,7 +1,5 @@
 #include "route.hpp"
 
-///////// Seters .//////
-
 void route::SetMethods(std::string value)
 {
     if (std::find(this->methods.begin(), this->methods.end(), value) != this->methods.end())
@@ -46,7 +44,7 @@ void route::SetIndexFile(std::vector<std::string> &words){
     
 }
 
-/// ////// Geters //////////
+
 std::vector<std::string> route::getIndexFiles(){
     return this->index_file;
 }
@@ -76,5 +74,5 @@ route::route()
 
 route::~route()
 {
-    // ////std::cout << "route distructor called !!!!!!!!!!!!" << std::endl;
+    
 }

@@ -141,10 +141,7 @@ void Multiplexer::timeoutCheker(confugParser &config)
             {
                 if (get_time_ms() - client[fd].lastTime > TIMEOUT_MS)
                 {
-                    std::cout << GREEN << "[" << fd << "] - CGI script timed out, killing process." << COLOR_RESET << std::endl;
                     client[fd].cgiInfos.isRunning = false;
-                    std::cout << GREEN << client[fd].cgiInfos.isRunning << COLOR_RESET << std::endl;
-                    std::cout << RED << "[" << fd << "] - Killing child process with PID: " << client[fd].cgiInfos.childPid << COLOR_RESET << std::endl;
                     kill(client[fd].cgiInfos.childPid, SIGKILL);
                     client[fd].Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT_504, client[fd].LocationMatch);
                     handelResponse(client[fd], fd, config);
@@ -193,10 +190,6 @@ void Multiplexer::timeoutCheker(confugParser &config)
             allClients.erase(allClients.begin() + i);
             epoll_ctl(EpoleFd, EPOLL_CTL_DEL, fd, NULL);
             continue;
-        }
-        if (client[fd].cgiInfos.isRunning)
-        {
-            std::cout << RED << "[" << fd << "] - CGI script is running, skipping timeout check." << COLOR_RESET << std::endl;
         }
 
         ++i;

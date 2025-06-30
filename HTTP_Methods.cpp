@@ -6,14 +6,6 @@ ResponseInfos Client::POST()
     std::string full_path = LocationMatch.directory + LocationMatch.path;
     ResponseInfos response;
     
-    // std::string file_extension = getFileExtension(full_path);
-    // file_extension += ':';
-    // if (isCGI(file_extension, LocationMatch.cgi))
-    // {
-    //     std::string path_cgi = LocationMatch.cgi[file_extension];
-    //     return executeCGI(path_cgi, full_path);
-    // }
-
     std::ostringstream ss;
     ss << "<html><body><h1>File uploaded successfully</h1>";
     ss << "<p>Saved to: " << LocationMatch.upload_path << "</p>";
@@ -171,16 +163,15 @@ ResponseInfos Client::GET()
     if (S_ISREG(file_info.st_mode))
     {
         if (access(full_path.c_str(), R_OK) != 0)
-            throw FORBIDDEN; // Forbidden
-        // IF CGI
+            throw FORBIDDEN; 
+
         std::string file_extension = getFileExtension(full_path);
         file_extension += ':';
-        //std::cout << "file_extension: " << file_extension << std::endl;
+
         if (isCGI(file_extension, LocationMatch.cgi))
         {
             std::string path_cgi = LocationMatch.cgi[file_extension];
             if(!cgiInfos.isRunning){
-                std::cout << GREEN << "[GET] Executing CGI script: " << path_cgi << " for file: " << full_path << COLOR_RESET << std::endl;
                 cgiInfos.isRunning = true;
                 return executeCGI(path_cgi, full_path);
             }

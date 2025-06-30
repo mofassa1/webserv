@@ -7,7 +7,6 @@ Multiplexer* g_mux = NULL;
 
 void handle_signal(int signum)
 {
-    ////std::cout << "\n[INFO] Caught signal: " << signum << ", cleaning up...\n";
     if (g_mux)
     {
         delete g_mux;
@@ -26,7 +25,6 @@ int main(int ac, char** av)
     if (ac != 2)
         return -1;
 
-    // Register signal handlers
     std::signal(SIGINT, handle_signal);
     std::signal(SIGTERM, handle_signal);
 
@@ -38,13 +36,11 @@ int main(int ac, char** av)
         g_mux = new Multiplexer();
         g_mux->startMultiplexing(*g_conf);
 
-        // Cleanup after run finishes successfully
         delete g_mux;
         delete g_conf;
     }
     catch(const std::exception& e)
     {
-        //std::cout << "[ERROR] " << e.what() << '\n';
         delete g_mux;
         delete g_conf;
         return 1;

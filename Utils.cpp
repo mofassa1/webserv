@@ -10,7 +10,7 @@ char hexToChar(char high, char low) {
 }
 
 bool isBadUri(const std::string &uri) {
-    // Rejects null bytes or control characters
+    
     for (size_t i = 0; i < uri.size(); ++i) {
         if (uri[i] == '\0' || uri[i] < 32)
             return true;
@@ -80,10 +80,7 @@ void epoll_change(int &EpoleFd, int &eventFd)
     event.events = EPOLLOUT | EPOLLET;
     event.data.fd = eventFd;
 
-    if (epoll_ctl(EpoleFd, EPOLL_CTL_MOD, eventFd, &event) == -1)
-    {
-        ////std::cout << "epoll_ctl failed to modify event" << std::endl;
-    }
+    epoll_ctl(EpoleFd, EPOLL_CTL_MOD, eventFd, &event);
 }
 
 std::string HOST_AND_PORT(std::string HOST, int PORT){

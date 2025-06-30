@@ -16,7 +16,6 @@ void Multiplexer::HandleRequest(int eventFd, const std::string& buffer, size_t b
         c.parse_request(eventFd, bytesReaded);
         if (c.state == done)
         {
-            std::cout << GREEN << "[" << eventFd << "]" << "- - - - - - DONE - - - - - -" << COLOR_RESET << std::endl;
             if (c.httpRequest.getMethod() == "GET")
                 c.Response = c.GET();
             if (c.httpRequest.getMethod() == "POST")
@@ -24,13 +23,11 @@ void Multiplexer::HandleRequest(int eventFd, const std::string& buffer, size_t b
             if (c.httpRequest.getMethod() == "DELETE")
                 c.Response = c.DELETE();
             
-            /////////////////////////////////
             epoll_change(this->EpoleFd, eventFd);
         }
     }
     catch (int error)
     {
-        //std::cout << RED << "[" << eventFd << "]" << "- - - - - ERROR: " << error << "- - - - - - - - " << COLOR_RESET << std::endl;
         if(client[eventFd].cgiInfos.isRunning)
             client[eventFd].cgiInfos.isRunning = false;
         client[eventFd].Response = Client::generateResponse(RESPONSE_ERROR, "", error, client[eventFd].LocationMatch);
@@ -38,8 +35,6 @@ void Multiplexer::HandleRequest(int eventFd, const std::string& buffer, size_t b
     }
     catch (std::exception &e)
     {
-        //std::cout << RED << "- - - - - Error in handle_request: " << e.what() << COLOR_RESET << std::endl;
-        
         epoll_ctl(this->EpoleFd, EPOLL_CTL_DEL, eventFd, NULL);
         config.removeClient(eventFd);
         clientOfServer.erase(eventFd);
@@ -56,6 +51,5 @@ void Multiplexer::HandleRequest(int eventFd, const std::string& buffer, size_t b
             }
         }
         close(eventFd);
-        //std::cout << "[" << eventFd << "]" << "- - - - - - - - CLOSED - - - - - -" << std::endl;
     }
 }

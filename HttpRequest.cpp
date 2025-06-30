@@ -161,7 +161,6 @@ void HttpRequest::headers()
             throw 5;
         vheaders.clear();
     }
-    print_map(mheaders);
 }
 
 bool HttpRequest::validbody(const std::string &buffer, size_t maxsize)
@@ -179,7 +178,7 @@ bool HttpRequest::validbody(const std::string &buffer, size_t maxsize)
         char *end;
         std::string content_length_str = mheaders["content-length"];
         content_length = static_cast<size_t>(strtoul(content_length_str.c_str(), &end, 10));
-        if (*end != '\0') // content_length == 0 || supprimed
+        if (*end != '\0') 
             throw BAD_REQUEST;
         if (content_length > maxsize)
             throw BAD_REQUEST;
@@ -198,7 +197,7 @@ void HttpRequest::initBodyReadIndex(const std::string &buffer)
     const std::string delimiter = "\r\n\r\n";
     size_t pos = buffer.find(delimiter);
 
-    // Body starts right after "\r\n\r\n"
+
     _Read_index_body = pos + delimiter.length();
 }
 

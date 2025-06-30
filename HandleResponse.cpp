@@ -32,13 +32,13 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         mimeTypes[".mp4"] = "video/mp4";
         mimeTypes[".pdf"] = "application/pdf";
         mimeTypes[".txt"] = "text/plain";
-        mimeTypes[".php"] = "text/html"; // for CGI
-        mimeTypes[".py"] = "text/html";  // for CGI
+        mimeTypes[".php"] = "text/html";
+        mimeTypes[".py"] = "text/html";  
         std::string ext = getFileExtension(path);
         if (mimeTypes.find(ext) != mimeTypes.end())
             response.contentType = mimeTypes[ext];
         else
-            response.contentType = "application/octet-stream"; // fallback for unknown types
+            response.contentType = "application/octet-stream";
         response.headers["Content-Type"] = response.contentType;
         response.headers["Content-Length"] = to_string(response.body.size());
         break;
@@ -58,7 +58,7 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         }
         if (!file.is_open())
         {
-            std::string message = Client::getStatusMessage(response.status); // like "Not Found"
+            std::string message = Client::getStatusMessage(response.status); 
             ss << "<html><head><title>" << response.status << " " << message << "</title></head>";
             ss << "<body><h1>" << response.status << " - " << message << "</h1></body></html>";
             response.body = ss.str();
@@ -84,7 +84,7 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
 
         response.body = ss.str();
         response.headers["Location"] = path;
-        response.contentType = ""; // usually empty for redirects
+        response.contentType = ""; 
         break;
     }
     case RESPONSE_DIRECTORY_LISTING:
@@ -125,7 +125,7 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         break;
     }
     default:
-        throw 500; // Internal server error
+        throw 500; 
     }
     return response;
 }
@@ -138,12 +138,10 @@ bool Multiplexer::handelResponse(Client &client, int eventfd, confugParser &conf
     const ResponseInfos &response = client.Response;
     std::ostringstream fullResponse;
 
-    // Status line
-    
+
     fullResponse << "HTTP/1.1 " << response.status << " "
                  << client.getStatusMessage(client.Response.status) << "\r\n";
 
-    // Headers
     for (std::map<std::string, std::string>::const_iterator it = response.headers.begin();
          it != response.headers.end(); ++it)
     {
@@ -152,23 +150,13 @@ bool Multiplexer::handelResponse(Client &client, int eventfd, confugParser &conf
 
     fullResponse << "\r\n";
 
-    // Body
     fullResponse << response.body;
 
     std::string finalOutput = fullResponse.str();
-    std::cout << YELLOW << finalOutput << COLOR_RESET << std::endl;
     ssize_t bytesSent = send(fd, finalOutput.c_str(), finalOutput.size(), 0);
 
-    if (bytesSent == -1)
-    {
-        //std::cout << RED << "[" << fd << "] - Error while sending response." << COLOR_RESET << std::endl;
-    }
-    else
-    {
-        //std::cout << GREEN << "[" << fd << "] - Sent " << bytesSent << " bytes." << COLOR_RESET << std::endl;
-    }
+
     return true;
-    //std::cout << "[" << fd << "] - Connection closed after sending response." << std::endl;
 }
 
 

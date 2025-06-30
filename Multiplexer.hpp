@@ -41,7 +41,7 @@ class Multiplexer
         bool    handelResponse(Client& client, int eventfd, confugParser &confug);
         void timeoutCheker(confugParser &config);
         void removeClient(confugParser &config, int eventFd);
-        /// //// signal handeler /////////
+
 
         std::vector <int> fileDiscriptors;
         int EpoleFd;
