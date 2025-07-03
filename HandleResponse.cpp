@@ -132,6 +132,8 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
 
 bool Multiplexer::handelResponse(Client &client, int eventfd, confugParser &config)
 {
+    (void)config;
+
     if(client.Response.status == 1337)
             return false;    
     int fd = eventfd;
@@ -154,7 +156,8 @@ bool Multiplexer::handelResponse(Client &client, int eventfd, confugParser &conf
 
     std::string finalOutput = fullResponse.str();
     ssize_t bytesSent = send(fd, finalOutput.c_str(), finalOutput.size(), 0);
-
+/// here we need to fix bytesSent !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    (void)bytesSent;
 
     return true;
 }

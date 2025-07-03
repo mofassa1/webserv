@@ -8,12 +8,12 @@ bool Multiplexer::isServerSocket(int fd)
 
 int Multiplexer::create_server_socket(unsigned short currentPort, std::string host)
 {
-    static std::vector<std::pair<unsigned short, std::string>> binded;
+    static std::vector<std::pair<unsigned short, std::string> > binded;
     static std::map<std::pair<unsigned short, std::string>, int> socketServer;
 
     bool found = false;
     std::pair<unsigned short, std::string> key_to_find = std::make_pair(currentPort, host);
-    for (std::vector<std::pair<unsigned short, std::string>>::iterator it = binded.begin(); it != binded.end(); ++it)
+    for (std::vector<std::pair<unsigned short, std::string> >::iterator it = binded.begin(); it != binded.end(); ++it)
     {
         if (it->first == key_to_find.first && it->second == key_to_find.second)
         {

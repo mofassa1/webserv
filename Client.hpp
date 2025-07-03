@@ -77,14 +77,18 @@ typedef struct S_LocationMatch {
     bool autoindex;
     bool is_query_match;
     
-    S_LocationMatch()
-        : path(""), directory(""), methods(),
-          upload_directory(""), cgi(), autoindex(false), is_query_match(false), is_cgi(false) {}
+S_LocationMatch()
+    : path(""), directory(""), HOST(""), PORT(0), methods(), index_files(),
+      upload_directory(""), upload_path(""), redirect_path(""), upload_file(),
+      cgi(), is_cgi(false), content_type_cgi(""), Error_pages(),
+      autoindex(false), is_query_match(false) {}
 
-    S_LocationMatch(std::string p, std::string d, std::vector<std::string> m,
-                    std::string i, std::string u, bool a, bool q)
-        : path(p), directory(d), methods(m),
-          upload_directory(u), cgi(), autoindex(a), is_query_match(q), is_cgi(false) {}
+S_LocationMatch(std::string p, std::string d, std::vector<std::string> m, std::string u, bool a, bool q)
+    : path(p), directory(d), HOST(""), PORT(0), methods(m), index_files(),
+      upload_directory(u), upload_path(""), redirect_path(""), upload_file(),
+      cgi(), is_cgi(false), content_type_cgi(""), Error_pages(),
+      autoindex(a), is_query_match(q) {}
+
 
 } t_LocationMatch;
 

@@ -7,6 +7,8 @@ Multiplexer* g_mux = NULL;
 
 void handle_signal(int signum)
 {
+    (void)signum;
+
     if (g_mux)
     {
         delete g_mux;
@@ -41,6 +43,7 @@ int main(int ac, char** av)
     }
     catch(const std::exception& e)
     {
+        std::cout << e.what() << std::endl;
         delete g_mux;
         delete g_conf;
         return 1;

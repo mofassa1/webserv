@@ -32,7 +32,7 @@ ResponseInfos Client::deleteDir(const std::string &path)
         response.body = "<html><body><h1>Forbidden</h1><p>Unable to access the directory: " + path + "</p></body></html>";
         response.contentType = "text/html";
         response.headers["Content-Type"] = "text/html";
-        response.headers["Content-Length"] = std::to_string(response.body.size());
+        response.headers["Content-Length"] = to_string(response.body.size());
         return response;
     }
     struct dirent *entry;
@@ -66,7 +66,7 @@ ResponseInfos Client::deleteDir(const std::string &path)
                     response.body = "<html><body><h1>Forbidden</h1><p>Unable to delete file: " + fullPath + "</p></body></html>";
                     response.contentType = "text/html";
                     response.headers["Content-Type"] = "text/html";
-                    response.headers["Content-Length"] = std::to_string(response.body.size());
+                    response.headers["Content-Length"] = to_string(response.body.size());
                     return response;
                 }
             }
@@ -80,14 +80,14 @@ ResponseInfos Client::deleteDir(const std::string &path)
         response.body = ss.str();
         response.contentType = "text/html";
         response.headers["Content-Type"] = "text/html";
-        response.headers["Content-Length"] = std::to_string(response.body.size());
+        response.headers["Content-Length"] = to_string(response.body.size());
         return response;
     }
     response.status = FORBIDDEN;
     response.body = "<html><body><h1>Forbidden</h1><p>Unable to delete directory: " + path + "</p></body></html>";
     response.contentType = "text/html";
     response.headers["Content-Type"] = "text/html";
-    response.headers["Content-Length"] = std::to_string(response.body.size());
+    response.headers["Content-Length"] = to_string(response.body.size());
     return response;
 }
 
@@ -143,7 +143,7 @@ ResponseInfos Client::GET()
         {
             for (size_t i = 0; i < LocationMatch.index_files.size(); i++)
             {
-                std::string index_path = (full_path.back() == '/' ? full_path : full_path + "/") + LocationMatch.index_files[i];
+                std::string index_path = (full_path[full_path.size() - 1] == '/' ? full_path : full_path + "/") + LocationMatch.index_files[i];
 
                 struct stat index_info;
                 if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))

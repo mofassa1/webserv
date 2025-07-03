@@ -212,6 +212,9 @@ void HttpRequest::checkBodyCompletionOnEOF()
 
 void HttpRequest::contentLength(const std::string &buffer, size_t totalbytesReaded, std::ofstream &upload_file, size_t EndofFile)
 { 
+    (void)totalbytesReaded;
+    (void)EndofFile;
+
     while(_Read_index_body < buffer.size()){
         if(body_received == content_length)
             break;

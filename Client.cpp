@@ -9,7 +9,7 @@ void Client::check_HOST()
         throw BAD_REQUEST;
     bool check = false;
 
-    for (int i = 0; i < servers.size(); i++)
+    for (size_t i = 0; i < servers.size(); i++)
     {
         if (servers[i]->GetHost() == host_value)
         {
@@ -67,7 +67,7 @@ void Client::LocationCheck()
     }
     if (!match_found)
     {
-        for (int i = 0; i < routes.size(); i++)
+        for (size_t i = 0; i < routes.size(); i++)
         {
             if (server_matched->GetRoute()[i].GetPats()["path:"] == "/")
             {
@@ -119,7 +119,9 @@ void Client::LocationCheck()
             std::string file_extension = getExtensionFromContentType(content_typee);
 
             LocationMatch.upload_path = LocationMatch.directory + LocationMatch.path + "/" +
-                                        (LocationMatch.upload_directory.empty() || LocationMatch.upload_directory.back() == '/' ? LocationMatch.upload_directory : LocationMatch.upload_directory + "/") +
+                                        (LocationMatch.upload_directory.empty() || \
+                                        LocationMatch.upload_directory[LocationMatch.upload_directory.size() - 1] == '/'\
+                                         ? LocationMatch.upload_directory : LocationMatch.upload_directory + "/") + \
                                         generateUniqueString() + file_extension;
             LocationMatch.upload_file.open(LocationMatch.upload_path.c_str(), std::ios::out | std::ios::binary);
             if (!LocationMatch.upload_file.is_open()) // GO BACK
@@ -130,6 +132,7 @@ void Client::LocationCheck()
 
 void Client::parse_request(int fd, size_t _Readed)
 {
+    (void)fd;
     switch (state)
     {
     case waiting:
