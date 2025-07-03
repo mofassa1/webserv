@@ -95,9 +95,9 @@ void Multiplexer::startMultiplexing(confugParser &config)
 }
 long get_time_ms()
 {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L);
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return (ts.tv_sec * 1000L) + (ts.tv_nsec / 1000000L);
 }
 
 void Multiplexer::NewClient(confugParser &config, int eventFd)
