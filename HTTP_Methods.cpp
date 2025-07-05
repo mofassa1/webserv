@@ -5,7 +5,15 @@ ResponseInfos Client::POST()
 {
     std::string full_path = LocationMatch.directory + LocationMatch.path;
     ResponseInfos response;
-    
+
+    std::string file_extension = getFileExtension(full_path);
+    file_extension += ':';
+    if (isCGI(file_extension, LocationMatch.cgi))
+    {
+        std::string path_cgi = LocationMatch.cgi[file_extension];
+        return executeCGI(path_cgi, full_path);
+    }
+
     std::ostringstream ss;
     ss << "<html><body><h1>File uploaded successfully</h1>";
     ss << "<p>Saved to: " << LocationMatch.upload_path << "</p>";
@@ -122,9 +130,9 @@ ResponseInfos Client::DELETE()
 
 ResponseInfos Client::GET()
 {
-    if(!LocationMatch.redirect_path.empty())
+    if (!LocationMatch.redirect_path.empty())
         return generateResponse(RESPONSE_REDIRECT, LocationMatch.redirect_path, 301, LocationMatch);
-        
+
     std::string full_path = LocationMatch.directory + LocationMatch.path;
 
     struct stat file_info;
@@ -133,7 +141,8 @@ ResponseInfos Client::GET()
 
     if (S_ISDIR(file_info.st_mode))
     {
-        if(!LocationMatch.path.empty() && LocationMatch.path[LocationMatch.path.size() - 1] != '/'){
+        if (!LocationMatch.path.empty() && LocationMatch.path[LocationMatch.path.size() - 1] != '/')
+        {
             std::string new_path = LocationMatch.path += "/";
             return generateResponse(RESPONSE_REDIRECT, new_path, 301, LocationMatch);
         }
@@ -149,7 +158,22 @@ ResponseInfos Client::GET()
                 if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
                 {
                     if (access(index_path.c_str(), R_OK) == 0)
+                    {
+                        std::string file_extension = getFileExtension(full_path);
+                        file_extension += ':';
+
+                        if (isCGI(file_extension, LocationMatch.cgi))
+                        {
+                            std::string path_cgi = LocationMatch.cgi[file_extension];
+                            if (!cgiInfos.isRunning)
+                            {
+                                cgiInfos.isRunning = true;
+                                return executeCGI(path_cgi, full_path);
+                            }
+                        }
+
                         return generateResponse(RESPONSE_FILE, index_path, OK, LocationMatch);
+                    }
                     else
                         throw FORBIDDEN;
                 }
@@ -163,7 +187,7 @@ ResponseInfos Client::GET()
     if (S_ISREG(file_info.st_mode))
     {
         if (access(full_path.c_str(), R_OK) != 0)
-            throw FORBIDDEN; 
+            throw FORBIDDEN;
 
         std::string file_extension = getFileExtension(full_path);
         file_extension += ':';
@@ -171,7 +195,8 @@ ResponseInfos Client::GET()
         if (isCGI(file_extension, LocationMatch.cgi))
         {
             std::string path_cgi = LocationMatch.cgi[file_extension];
-            if(!cgiInfos.isRunning){
+            if (!cgiInfos.isRunning)
+            {
                 cgiInfos.isRunning = true;
                 return executeCGI(path_cgi, full_path);
             }

@@ -1,0 +1,70 @@
+server:
+  host: 127.0.0.1
+  port: 8080
+  client_body_size_limit: 210149500
+  server_name: test.com
+  default_error_pages:
+    404: www/html/404.html
+    403: www/html/403.html 
+    501: www/html/501.html
+    502: www/html/502.html
+  route:
+    path: /uploads
+    directory: ./www/uploads
+    methods: GET
+    index_file: uplaod.html 
+    upload_directory: ./upload_directory
+    auto_index: on
+    cgi:
+      .php: /usr/bin/php-cgi
+  route:
+    auto_index: OFF
+    path: /
+    directory: ./www/web
+    methods: GET POST
+    index_file: web.html
+    upload_directory: ./upload_directory
+    cgi:
+      .php: /usr/bin/php-cgi
+      .py:  /usr/bin/python3
+      .test: /hello
+  route:
+    path: /scripts
+    auto_index: ON
+    directory: ./www/scripts
+    methods: GET POST DELETE
+    index_file: script.py
+    upload_directory: ./upload_directory
+    cgi:
+      .php: /usr/bin/php-cgi
+      .py:  /usr/bin/python3
+  route:
+    path: /videos
+    directory: ./www/videos
+    index_file: video.html
+    methods: GET POST DELETE
+    upload_directory: ./upload_directory
+    cgi:
+      .php: /usr/bin/php-cgi
+      .py:  /usr/bin/python3
+server:
+  host: 127.0.0.5
+  port: 9090
+  server_name: example.com
+  client_body_size_limit: 210149500
+  default_error_pages:
+    404: www/html/404.html
+    403: www/html/403.html 
+    501: www/html/501.html
+    502: www/html/502.html
+  route:
+    path: /
+    directory: ./www/web
+    methods: GET POST
+    index_file: web.html
+    upload_directory: ./upload_directory
+    auto_index: OFF
+    cgi:
+      .php: /usr/bin/php-cgi
+      .py:  /usr/bin/python3
+      .test: /hello
