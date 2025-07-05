@@ -156,9 +156,9 @@ bool Multiplexer::handelResponse(Client &client, int eventfd, confugParser &conf
 
     std::string finalOutput = fullResponse.str();
     ssize_t bytesSent = send(fd, finalOutput.c_str(), finalOutput.size(), 0);
-/// here we need to fix bytesSent !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    (void)bytesSent;
-
+    if(bytesSent == -1){
+        std::cout << RED << "ERROR WHILE SENDING RESPONSE " << COLOR_RESET << std::endl;
+    }
     return true;
 }
 
