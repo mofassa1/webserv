@@ -67,7 +67,7 @@ void HttpRequest::validstartline()
         throw BAD_REQUEST;
     if (vstart_line[3] != " ")
         throw BAD_REQUEST;
-    if (vstart_line[4] != "HTTP/1.1" && vstart_line[4] != "HTTP/1.0")
+    if (vstart_line[4] != "HTTP/1.1")
         throw BAD_REQUEST;
     if (vstart_line[5] != "\r")
         throw BAD_REQUEST;

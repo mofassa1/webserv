@@ -18,7 +18,7 @@ server:
   route:
     path: /
     directory: ./www/web
-    methods: GET POST DELETE
+    methods: DELETE GET POST
     index_file: web.html
     auto_index: ON
     upload_directory: ./upload_directory
@@ -29,7 +29,7 @@ server:
     path: /scripts
     directory: ./www/scripts
     methods: GET POST DELETE
-    index_file: loop.py
+    index_file: script.py
     upload_directory: ./upload_directory
     cgi:
       .php: /usr/bin/php-cgi
@@ -49,9 +49,17 @@ server:
     methods: GET POST DELETE
     index_file: uplaod.html 
     upload_directory: ./upload_directory
-    auto_index: on
+    auto_index: ON
     cgi:
       .php: /usr/bin/php-cgi
+  route:
+    path: /redirect
+    directory: ./www/redirect
+    methods: GET POST DELETE
+    index_file: redirect.html
+    upload_directory: ./upload_directory
+    auto_index: ON
+    redirect: /uploads
 server:
   host: 127.0.0.5
   port: 9090
