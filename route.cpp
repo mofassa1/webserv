@@ -45,25 +45,25 @@ void route::SetIndexFile(std::vector<std::string> &words){
 }
 
 
-std::vector<std::string> route::getIndexFiles(){
+std::vector<std::string>& route::getIndexFiles(){
     return this->index_file;
 }
 
-std::map<std::string, std::string> route::GetPats(void)
+std::map<std::string, std::string>& route::GetPats(void)
 {
     return this->paths;
 }
-std::vector<std::string> route::GetMethods(void)
+std::vector<std::string>& route::GetMethods(void)
 {
     return this->methods;
 }
 
-std::map<std::string, std::string> route::GetCGI()
+std::map<std::string, std::string>& route::GetCGI()
 {
     return this->cgi;
 }
 
-bool route::GetAutoIndex(void){
+bool& route::GetAutoIndex(void){
     return this->auto_index;
 }
 
@@ -75,4 +75,17 @@ route::route()
 route::~route()
 {
     
+}
+
+route& route::operator=(const route& other)
+{
+    if (this != &other)
+    {
+        this->paths = other.paths;
+        this->cgi = other.cgi;
+        this->index_file = other.index_file;
+        this->methods = other.methods;
+        this->auto_index = other.auto_index;
+    }
+    return *this;
 }

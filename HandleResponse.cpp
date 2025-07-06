@@ -48,16 +48,15 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         std::string errorPagePath;
         std::ifstream file;
         std::ostringstream ss;
-        std::cout << "BEFORE" << std::endl;
         std::map<unsigned short, std::string> &Error_pages = client.server_matched->GetDefaultERRPages();
         unsigned short statusCode = static_cast<unsigned short>(response.status);
-        std::cout << "AFTER" << std::endl;   
+   
         if (Error_pages.count(statusCode))
         {
             errorPagePath = Error_pages[statusCode];
             file.open(errorPagePath.c_str(), std::ios::binary);
         }
-        std::cout << "BEETWEN" << std::endl;
+        
         if (!file.is_open())
         {
             std::string message = Client::getStatusMessage(response.status); 

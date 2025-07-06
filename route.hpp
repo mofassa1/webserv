@@ -25,12 +25,13 @@ class route
         void Setcgi(std::string key, std::string value);
         void SetAutoIndex(void);
         ///////// geters //////////
-        std::map<std::string, std::string> GetPats(void);
-        std::vector<std::string> GetMethods(void);
-        std::map<std::string, std::string> GetCGI();
-        bool GetAutoIndex(void);
-        std::vector<std::string> getIndexFiles();
+        std::map<std::string, std::string>& GetPats(void);
+        std::vector<std::string>& GetMethods(void);
+        std::map<std::string, std::string>& GetCGI();
+        bool& GetAutoIndex(void);
+        std::vector<std::string>& getIndexFiles();
         void SetIndexFile(std::vector<std::string> &words);
+        route& operator=(const route& other);
         route(/* args */);
         ~route();
 };

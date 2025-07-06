@@ -18,7 +18,7 @@ server:
   route:
     path: /
     directory: ./www/web
-    methods: POST DELETE
+    methods: GET POST DELETE
     index_file: web.html
     auto_index: ON
     upload_directory: ./upload_directory
@@ -29,7 +29,7 @@ server:
     path: /scripts
     directory: ./www/scripts
     methods: GET POST DELETE
-    index_file: script.py
+    index_file: loop.py
     upload_directory: ./upload_directory
     cgi:
       .php: /usr/bin/php-cgi
@@ -56,6 +56,34 @@ server:
   host: 127.0.0.5
   port: 9090
   server_name: example.com
+  client_body_size_limit: 210149500
+  default_error_pages:
+    400: www/Error_pages/400.html
+    401: www/Error_pages/401.html
+    403: www/Error_pages/403.html 
+    404: www/Error_pages/404.html
+    405: www/Error_pages/405.html
+    408: www/Error_pages/408.html
+    500: www/Error_pages/500.html
+    501: www/Error_pages/501.html
+    502: www/Error_pages/502.html
+    503: www/Error_pages/503.html
+    504: www/Error_pages/504.html
+  route:
+    path: /
+    directory: ./www/web
+    methods: GET POST DELETE
+    index_file: web.html
+    upload_directory: ./upload_directory
+    auto_index: OFF
+    cgi:
+      .php: /usr/bin/php-cgi
+      .py:  /usr/bin/python3
+      .test: /hello
+server:
+  host: 127.0.0.7
+  port: 9090
+  server_name: example1.com
   client_body_size_limit: 210149500
   default_error_pages:
     400: www/Error_pages/400.html

@@ -11,7 +11,11 @@ ResponseInfos Client::POST()
     if (isCGI(file_extension, LocationMatch.cgi))
     {
         std::string path_cgi = LocationMatch.cgi[file_extension];
-        return executeCGI(path_cgi, full_path);
+        if (!cgiInfos.isRunning)
+        {
+            cgiInfos.isRunning = true;
+            return executeCGI(path_cgi, full_path);
+        }
     }
 
     std::ostringstream ss;
@@ -130,7 +134,8 @@ ResponseInfos Client::DELETE()
 
 ResponseInfos Client::GET()
 {
-    if (!LocationMatch.redirect_path.empty()){
+    if (!LocationMatch.redirect_path.empty())
+    {
         return generateResponse(RESPONSE_REDIRECT, LocationMatch.redirect_path, 301, *this);
     }
 
@@ -160,7 +165,7 @@ ResponseInfos Client::GET()
                 {
                     if (access(index_path.c_str(), R_OK) == 0)
                     {
-                        std::string file_extension = getFileExtension(full_path);
+                        std::string file_extension = getFileExtension(index_path);
                         file_extension += ':';
 
                         if (isCGI(file_extension, LocationMatch.cgi))
@@ -169,7 +174,7 @@ ResponseInfos Client::GET()
                             if (!cgiInfos.isRunning)
                             {
                                 cgiInfos.isRunning = true;
-                                return executeCGI(path_cgi, full_path);
+                                return executeCGI(path_cgi, index_path);
                             }
                         }
 

@@ -54,7 +54,11 @@ void Client::LocationCheck()
 
         if (LocationMatch.path.compare(0, len, route_path) == 0)
         {
-            if (LocationMatch.path.length() == len || LocationMatch.path[len] == '/')
+            bool exact_match = LocationMatch.path.length() == len;
+            bool boundary_match = LocationMatch.path.length() > len && LocationMatch.path[len] == '/';
+            bool fallback_match = route_path == "/";
+
+            if (exact_match || boundary_match || fallback_match)
             {
                 if (len > best_match_len)
                 {
@@ -66,18 +70,7 @@ void Client::LocationCheck()
         }
     }
     if (!match_found)
-    {
-        for (size_t i = 0; i < routes.size(); i++)
-        {
-            if (server_matched->GetRoute()[i].GetPats()["path:"] == "/")
-            {
-                BestMatch = routes[i];
-                match_found = true;
-            }
-        }
-        if (!match_found)
             throw NOT_FOUND;
-    }
     LocationMatch.methods = BestMatch.GetMethods();
     bool method_allowed = false;
     for (size_t i = 0; i < LocationMatch.methods.size(); ++i)
@@ -140,6 +133,7 @@ void Client::parse_request(int fd, size_t _Readed)
             break;
         state = request_start_line;
         httpRequest.storethebuffer(buffer);
+        std::cout << YELLOW << buffer << COLOR_RESET << std::endl;
         /* fall through */
     case request_start_line:
         httpRequest.start_line();
