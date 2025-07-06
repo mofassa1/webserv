@@ -25,7 +25,7 @@ re:fclean all
 
 
 build:
-	make re
+	make
 	make clean
 	clear
 .SECONDARY: $(OBJ)

@@ -154,7 +154,7 @@ ResponseInfos Client::executeCGI(const std::string &cgiPath, const std::string &
         }
         cgiInfos.startTime = time(NULL);
     }
-    return generateResponse(RESPONSE_CGI_CHECK, "", 1337, LocationMatch);
+    return generateResponse(RESPONSE_CGI_CHECK, "", 1337, *this);
 }
 
 bool Client::CGI_RESPONSE()
@@ -164,7 +164,7 @@ bool Client::CGI_RESPONSE()
     {
         std::remove(cgiInfos.outputFileName.c_str());
         std::remove(cgiInfos.inputFileName.c_str());
-        Response = generateResponse(RESPONSE_ERROR, "", INTERNAL, LocationMatch);
+        Response = generateResponse(RESPONSE_ERROR, "", INTERNAL, *this);
         return true;
     }
 

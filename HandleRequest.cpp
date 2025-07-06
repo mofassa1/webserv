@@ -30,7 +30,7 @@ void Multiplexer::HandleRequest(int eventFd, const std::string& buffer, size_t b
     {
         if(client[eventFd].cgiInfos.isRunning)
             client[eventFd].cgiInfos.isRunning = false;
-        client[eventFd].Response = Client::generateResponse(RESPONSE_ERROR, "", error, client[eventFd].LocationMatch);
+        client[eventFd].Response = Client::generateResponse(RESPONSE_ERROR, "", error, client[eventFd]);
         epoll_change(this->EpoleFd, eventFd);
     }
     catch (std::exception &e)

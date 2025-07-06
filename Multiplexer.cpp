@@ -143,7 +143,7 @@ void Multiplexer::timeoutCheker(confugParser &config)
                 {
                     client[fd].cgiInfos.isRunning = false;
                     kill(client[fd].cgiInfos.childPid, SIGKILL);
-                    client[fd].Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT_504, client[fd].LocationMatch);
+                    client[fd].Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT_504, client[fd]);
                     handelResponse(client[fd], fd, config);
                     close(fd);
                     if (it != client.end())
@@ -175,9 +175,11 @@ void Multiplexer::timeoutCheker(confugParser &config)
         if (get_time_ms() - client[fd].lastTime > TIMEOUT_MS)
         {
             Client curentClient;
-            if (it != client.end())
+            if (it != client.end()){
                 curentClient = client[fd];
-            curentClient.Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT, curentClient.LocationMatch);
+                curentClient.server_matched = config.GetAllData()[0]; 
+            }
+            curentClient.Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT, curentClient);
             handelResponse(curentClient, fd, config);
             close(fd);
             if (it != client.end())
@@ -186,7 +188,6 @@ void Multiplexer::timeoutCheker(confugParser &config)
             }
             config.removeClient(fd);
             clientOfServer.erase(fd);
-
             allClients.erase(allClients.begin() + i);
             epoll_ctl(EpoleFd, EPOLL_CTL_DEL, fd, NULL);
             continue;

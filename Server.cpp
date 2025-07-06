@@ -62,7 +62,7 @@ size_t Server::Getclient_body_size_limit(void){
 std::string Server::GetServerName(void){
     return this->server_name;
 }
-std::map<unsigned short, std::string>  Server::GetDefaultERRPages(void){
+std::map<unsigned short, std::string>  &Server::GetDefaultERRPages(void){
     return this->default_error_pages;
 }
 std::vector<route> Server::GetRoute(void){

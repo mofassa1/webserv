@@ -130,8 +130,9 @@ ResponseInfos Client::DELETE()
 
 ResponseInfos Client::GET()
 {
-    if (!LocationMatch.redirect_path.empty())
-        return generateResponse(RESPONSE_REDIRECT, LocationMatch.redirect_path, 301, LocationMatch);
+    if (!LocationMatch.redirect_path.empty()){
+        return generateResponse(RESPONSE_REDIRECT, LocationMatch.redirect_path, 301, *this);
+    }
 
     std::string full_path = LocationMatch.directory + LocationMatch.path;
 
@@ -144,7 +145,7 @@ ResponseInfos Client::GET()
         if (!LocationMatch.path.empty() && LocationMatch.path[LocationMatch.path.size() - 1] != '/')
         {
             std::string new_path = LocationMatch.path += "/";
-            return generateResponse(RESPONSE_REDIRECT, new_path, 301, LocationMatch);
+            return generateResponse(RESPONSE_REDIRECT, new_path, 301, *this);
         }
         if (access(full_path.c_str(), R_OK | X_OK) != 0)
             throw FORBIDDEN;
@@ -172,7 +173,7 @@ ResponseInfos Client::GET()
                             }
                         }
 
-                        return generateResponse(RESPONSE_FILE, index_path, OK, LocationMatch);
+                        return generateResponse(RESPONSE_FILE, index_path, OK, *this);
                     }
                     else
                         throw FORBIDDEN;
@@ -180,7 +181,7 @@ ResponseInfos Client::GET()
             }
         }
         if (LocationMatch.autoindex)
-            return generateResponse(RESPONSE_DIRECTORY_LISTING, full_path, OK, LocationMatch);
+            return generateResponse(RESPONSE_DIRECTORY_LISTING, full_path, OK, *this);
         else
             throw FORBIDDEN;
     }
@@ -201,7 +202,7 @@ ResponseInfos Client::GET()
                 return executeCGI(path_cgi, full_path);
             }
         }
-        return generateResponse(RESPONSE_FILE, full_path, OK, LocationMatch);
+        return generateResponse(RESPONSE_FILE, full_path, OK, *this);
     }
     throw NOT_FOUND;
 }

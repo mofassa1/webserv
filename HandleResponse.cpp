@@ -1,11 +1,10 @@
 #include "Multiplexer.hpp"
 
-ResponseInfos Client::generateResponse(ResponseType type, const std::string &path, int statusCode, S_LocationMatch &LocationMatch)
+ResponseInfos Client::generateResponse(ResponseType type, const std::string &path, int statusCode, Client &client)
 {
     ResponseInfos response;
     response.status = statusCode;
 
-    (void)LocationMatch;
     switch (type)
     {
     case RESPONSE_FILE:
@@ -49,13 +48,16 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         std::string errorPagePath;
         std::ifstream file;
         std::ostringstream ss;
+        std::cout << "BEFORE" << std::endl;
+        std::map<unsigned short, std::string> &Error_pages = client.server_matched->GetDefaultERRPages();
         unsigned short statusCode = static_cast<unsigned short>(response.status);
-
-        if (LocationMatch.Error_pages.count(statusCode))
+        std::cout << "AFTER" << std::endl;   
+        if (Error_pages.count(statusCode))
         {
-            errorPagePath = LocationMatch.Error_pages[statusCode];
+            errorPagePath = Error_pages[statusCode];
             file.open(errorPagePath.c_str(), std::ios::binary);
         }
+        std::cout << "BEETWEN" << std::endl;
         if (!file.is_open())
         {
             std::string message = Client::getStatusMessage(response.status); 
@@ -68,7 +70,7 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
             ss << file.rdbuf();
             response.body = ss.str();
         }
-
+        
         response.contentType = "text/html";
         response.headers["Content-Type"] = response.contentType;
         response.headers["Content-Length"] = to_string(response.body.size());
@@ -100,7 +102,7 @@ ResponseInfos Client::generateResponse(ResponseType type, const std::string &pat
         {
             if (std::string(entry->d_name) == "." || std::string(entry->d_name) == "..")
                 continue;
-            std::string to_path = LocationMatch.path[LocationMatch.path.size() - 1] == '/' ? LocationMatch.path : LocationMatch.path + "/";
+            std::string to_path = client.LocationMatch.path[client.LocationMatch.path.size() - 1] == '/' ? client.LocationMatch.path : client.LocationMatch.path + "/";
             dirContent << "<li><a href=\"" << to_path + entry->d_name << "\">" << entry->d_name << "</a></li>";
         }
         dirContent << "</ul></body></html>";

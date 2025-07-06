@@ -33,7 +33,7 @@ class Server
         std::vector<unsigned short> GetPorts(void);
         size_t Getclient_body_size_limit(void);
         std::string GetServerName(void);
-        std::map<unsigned short, std::string>  GetDefaultERRPages(void);
+        std::map<unsigned short, std::string>  &GetDefaultERRPages(void);
         std::vector<route> GetRoute(void);
         
         ///////////// sokets ////////////
@@ -50,5 +50,22 @@ class Server
 
         Server();
         ~Server();
+
+        Server& operator=(const Server& other)
+        {
+            if (this != &other) // avoid self-assignment
+            {
+                sockets = other.sockets;
+                clientSocets = other.clientSocets;
+                host = other.host;
+                ports = other.ports;
+                client_body_size_limit = other.client_body_size_limit;
+                server_name = other.server_name;
+                default_error_pages = other.default_error_pages;
+                routs = other.routs;
+                fd = other.fd;
+            }
+            return *this;
+        }
 };
 

@@ -5,7 +5,7 @@ void Client::check_HOST()
     std::string host_value = httpRequest.GetHost();
     if (host_value.empty())
         throw BAD_REQUEST;
-    if(countWords(host_value) > 1)
+    if (countWords(host_value) > 1)
         throw BAD_REQUEST;
     bool check = false;
 
@@ -94,7 +94,6 @@ void Client::LocationCheck()
     LocationMatch.autoindex = BestMatch.GetAutoIndex();
     LocationMatch.index_files = BestMatch.getIndexFiles();
     LocationMatch.cgi = BestMatch.GetCGI();
-    LocationMatch.Error_pages = server_matched->GetDefaultERRPages();
     LocationMatch.redirect_path = BestMatch.GetPats()["redirect:"];
     LocationMatch.path = (LocationMatch.path == "/") ? "" : LocationMatch.path;
     if (httpRequest.getMethod() == "POST")
@@ -119,9 +118,10 @@ void Client::LocationCheck()
             std::string file_extension = getExtensionFromContentType(content_typee);
 
             LocationMatch.upload_path = LocationMatch.directory + LocationMatch.path + "/" +
-                                        (LocationMatch.upload_directory.empty() || \
-                                        LocationMatch.upload_directory[LocationMatch.upload_directory.size() - 1] == '/'\
-                                         ? LocationMatch.upload_directory : LocationMatch.upload_directory + "/") + \
+                                        (LocationMatch.upload_directory.empty() ||
+                                                 LocationMatch.upload_directory[LocationMatch.upload_directory.size() - 1] == '/'
+                                             ? LocationMatch.upload_directory
+                                             : LocationMatch.upload_directory + "/") +
                                         generateUniqueString() + file_extension;
             LocationMatch.upload_file.open(LocationMatch.upload_path.c_str(), std::ios::out | std::ios::binary);
             if (!LocationMatch.upload_file.is_open()) // GO BACK
