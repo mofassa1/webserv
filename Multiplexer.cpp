@@ -136,8 +136,7 @@ void Multiplexer::timeoutCheker(confugParser &config)
 
         if (client[fd].cgiInfos.isRunning == true)
         {
-            int status;
-            if (waitpid(client[fd].cgiInfos.childPid, &status, WNOHANG) == 0)
+            if (waitpid(client[fd].cgiInfos.childPid, &client[fd].cgiInfos.status, WNOHANG) == 0)
             {
                 if (get_time_ms() - client[fd].lastTime > TIMEOUT_MS)
                 {

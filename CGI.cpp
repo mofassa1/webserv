@@ -179,8 +179,26 @@ bool Client::CGI_RESPONSE()
     std::map<std::string, std::string> cgi_headers;
     std::string cgi_body;
 
-    bool headerParseSuccess = parseCGIHeaders(cgiOutput, cgi_headers, cgi_body);
+    int ext_status;
+    if (WIFEXITED(cgiInfos.status))
+        ext_status = WEXITSTATUS(cgiInfos.status);
+    else
+        ext_status = -1;
 
+    if (ext_status != 0) {
+
+        Response.status = 502;
+        Response.contentType = "text/html";
+        Response.body = "<h1>502 Bad Gateway</h1><p>CGI script execution failed.</p>";
+
+        std::ostringstream contentLengthStream;
+        contentLengthStream << Response.body.size();
+        Response.headers["Content-Length"] = contentLengthStream.str();
+        Response.headers["Content-Type"] = Response.contentType;
+        return true;
+    }
+    bool headerParseSuccess = parseCGIHeaders(cgiOutput, cgi_headers, cgi_body);
+    
     if (!headerParseSuccess)
     {
         std::cerr << RED << "[CGI ERROR] Failed to parse CGI headers" << COLOR_RESET << std::endl;

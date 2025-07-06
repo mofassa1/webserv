@@ -133,7 +133,7 @@ void Client::parse_request(int fd, size_t _Readed)
             break;
         state = request_start_line;
         httpRequest.storethebuffer(buffer);
-        std::cout << YELLOW << buffer << COLOR_RESET << std::endl;
+        // std::cout << YELLOW << buffer << COLOR_RESET << std::endl;
         /* fall through */
     case request_start_line:
         httpRequest.start_line();

@@ -56,6 +56,7 @@ typedef struct CGIInfos {
     std::string inputFileName;
     std::string outputFileName;
     bool isRunning;
+    int status;
     CGIInfos(): startTime(0), childPid(0), inputFileName(""), outputFileName(""), isRunning(false) {}
 }t_CGIInfos;
 
