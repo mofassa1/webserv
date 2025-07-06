@@ -177,7 +177,7 @@ void Multiplexer::timeoutCheker(confugParser &config)
             Client curentClient;
             if (it != client.end()){
                 curentClient = client[fd];
-                curentClient.server_matched = config.GetAllData()[0]; 
+                curentClient.server_matched = clientOfServer[fd][0]; 
             }
             curentClient.Response = Client::generateResponse(RESPONSE_ERROR, "", TIMEOUT, curentClient);
             handelResponse(curentClient, fd, config);
